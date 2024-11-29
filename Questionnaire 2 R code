@@ -1,1 +1,1095 @@
+#packages
+install.packages("tidyverse")
+install.packages("table1")
+install.packages("rmarkdown")
+install.packages("data.table")
+
+require(tidyverse)
+require(ggplot2)
+require(stringr)
+require(data.table)
+require(scales)
+require(dplyr)
+require(readxl)
+require(table1)
+require(sqldf)
+library(tictoc)
+library(lubridate)
+library(data.table)
+library(dplyr)
+library(stringr)
+
+
+library(extrafont)
+
+#PHE mid colour palette
+cbPalette <- c("blue","red", "pink", "brown", "black", "green","grey", "orange","yellow","dark red")
+
+theme_set(theme_bw(base_size = 12, base_family="times"))
+
+#read in coded responses
+coded_Q2 <- read_excel("M:/Questionnaire data/questionnaire 2 coded responses.xlsx", sheet = 1, trim_ws = T, col_types = NULL)
+
+coded2_Q2 <- coded_Q2[c("URN", "Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "Q7_a",  "Q8",  "Q9",  "Q10",  "Q11",  "Q12_1", "Q12_2", "Q12_3", "Q12_4", "Q12_a", "Q13", "Q14_1",  "Q14_2", "Q14_3", "Q14_4", "Q14_5", "Q14_6", "Q15", "Q16", "Q17", "Q18", "Q19", "Q20", "Q23", "Q23_a_1", "Q23_a_2", "Q23_a_3", "Q23_a_4", "Q23_a_5", "Q23_a_6", "Q23_a_i", "Q23_b_1", "Q23_b_2", "Q23_b_3", "Q23_b_4", "Q23_b_i", "Q24", "Q24_a", "Q25", "Q25_a", "Q26", "Q27", "Q28", "Q29", "Q30_1", "Q30_2", "Q35", "Q36", "Q37", "Q38", "Q39", "Q42", "Q42_a", "Q42_b", "Q42_b_i", "Q42_b_ii", "Q42_b_ii_a", "Q42_c", "Q42_c_i", "Q42_d", "Q42_d_i", "Q42_d_ii", "Q42_d_iii", "Q44_1",  "Q44_2", "Q44_3", "Q44_4", "Q44_5", "Q44_6", "Q44_7", "Q44_8", "Q44_a", "CompletionDate")]
+
+#read in noncoded responses
+noncoded_Q2 <- read_excel("M:/Questionnaire data/questionnaire 2 non-coded responses.xlsx", sheet = 1, trim_ws = T, col_types = NULL)
+
+noncoded2_Q2 <- noncoded_Q2[c("Unique Response Number", "21.1. If I get the flu, I will get very ill.", "21.2. If I get the flu, I will have to stay home from work/school.", "21.3. If I get the flu, my baby could get ill.", "21.4. If I get the flu, it could hurt my baby.", "21.5. If I get the flu, my other family members or friends could get ill.", "21.6. If I get the flu, my co-workers/colleagues could get ill.", "21.7. If I get the flu, I will die.", "22.1. I feel knowledgeable about the flu in general.", "22.2. I feel knowledgeable about my risk of getting the flu.", "22.3. I am at risk of getting the flu.", "22.4. My family and friends are at risk of getting the flu.", "31.1. If I have the flu vaccine, I will have side effects from it.", "31.2. If I have the flu vaccine, it will be painful.", "31.3. If I have the flu vaccine, it will not protect me from getting the flu.", "31.4. If I have the flu vaccine, it will not protect my baby.", "31.a.1. It is inconvenient for me to get the flu vaccine.", "31.a.2. There is a shortage of the flu vaccine.", "31.a.3. The flu vaccine was recommended to me by my healthcare provider (e.g. doctor, nurse, midwife).", "32.1. If I have the flu vaccine, I will not get ill with the flu.", "32.2. If I have the flu vaccine, I will help prevent my baby from getting the flu.", "32.3. If I have the flu vaccine, I will help prevent my family/friends from getting ill with the flu.", "33.1. Vaccines prevent disease.", "33.2. Vaccines are safe.", "33.3. I intend to vaccinate my child with the flu vaccine when they are old enough.", "33.4. I intend to vaccinate my baby when they are born with all vaccines offered.", "33.5. I am more likely to have a vaccine if my family members or friends have had it.", "34.1. - doctor", "34.2. - pharmacist", "34.3. - nurse", "34.4. - midwife", "34.5. - health visitor", "34.6. - family member or friend", "40.1. If I get COVID-19, I will get very ill.", "40.2. If I get COVID-19, I will have to isolate myself.", "40.3. If I get COVID-19, my family members and friends who came in contact with me will have to quarantine themselves.", "40.4. If I get COVID-19, my baby could get ill.", "40.5. If I get COVID-19, my other family members or friends could get ill.", "41.1. I feel knowledgeable about COVID-19 in general.", "41.2. I feel knowledgeable about my risk of getting COVID-19.", "41.3. I am at risk of getting COVID-19.", "41.4. My family and friends are at risk of getting COVID-19.", "43.1. A COVID-19 vaccine would protect me.", "43.2. A COVID-19 vaccine would protect my baby, other family members, or friends from getting ill with COVID-19.", "43.3. I would vaccinate my baby against COVID-19 as soon as possible after they are born.", "43.4. If a COVID-19 vaccine was seasonal, I would get it every year.", "43.5. I would get a COVID-19 vaccine if I wasn't pregnant.")]
+
+#bind coded and non-coded
+noncoded_Q2[noncoded_Q2==""] <- NA
+
+full_Q2 <- cbind(coded2_Q2, noncoded2_Q2)
+
+#rename columns
+colnames(full_Q2)
+names_Q2 <- c("URN", "Consent", "Age", "Weeks.pregnant", "Prev.pregnancy", "No.of.children", "High.risk", "Education.Lvl", "Education.other", "Occupation", "Postcode", "Income", "Smartphone", "Access.GP.online.appts", "Access.GP.online.prescrp", "Access.GP.online.records", "Access.GP.online.other", "Access.GP.other.specify", "No.in.household", "Live.with.alone", "Live.with.partner", "Live.with.child.ren", "Live.with.parent.s", "Live.with.other.family", "Live.with.roommate.s", "Ethnicity", "Smoker", "Exercise.before", "Exercise.currently", "Antenatal.vitamins", "Folic.acid", "Offered.flu.vacc", "If.yes.offered.GP", "If.yes.offered.wo.hosp", "If.yes.offered.comm.ser.midwife", "If.yes.offered.health.vis", "If.yes.offered.pharm", "If.yes.offered.other", "Who.other.offered.specify", "How.offered.letter", "How.offered.text", "How.offered.face.to.face", "How.offered.other", "How.other.offered.specify", "Flu.vacc.this.preg", "If.no.intend", "Flu.vacc.prev.preg", "If.yes.side.effects", "Discuss.vacc.with.partner.fam", "You.or.close.friend.fam.flu", "OTC.meds.flu", "Alt.med.flu", "Pertuss.vacc.yes", "Pertuss.vacc.no", "More.less.likely.intranasal", "More.less.likely.oral", "You.or.close.friend.fam.pos.COVID", "You.or.close.friend.fam.hosp.COVID", "Shield", "Have.you.had.COVID.vacc", "If.no.reason.not.had.COVID.vacc", "If.1.dose.which.vacc.had", "If.1.dose.did.receive.prior.to.preg", "If.1.dose.where.stand.on.2nd.dose", "If.1.dose.reason.not.have.2nd.dose", "If.2.doses.which.vacc.had", "If.2.doses.when.receive", "If.2.doses.have.you.had.booster", "If.2.doses.why.not.had.booster", "If.2.doses.which.booster", "If.2.doses.when.receive.booster", "Heard.Uni.site", "Heard.GP.prac", "Heard.Mumsnet", "Heard.Netmums", "Heard.Bambis", "Heard.Liv.Mums", "Heard.fam.friend", "Heard.other", "Heard.ques.other.specify", "Completion.Date", "Unique.Response.Number", "Flu.ill", "Flu.stay.home.work.school", "Flu.baby.ill", "Flu.hurt.baby", "Flu.fam.friends.ill", "Flu.coworkers.colleagues.ill", "Flu.die", "Knowledgeable.flu.general", "Knowledgeable.flu.risk", "I.am.risk.getting.flu", "Fam.friends.risk.getting.flu", "Flu.vacc.side.effects", "Flu.vacc.painful", "Flu.vacc.not.protect.me", "Flu.vacc.not.protect.baby", "Inconvenient.flu.vacc", "Shortage.flu.vacc", "Flu.vacc.recommended", "Flu.vacc.not.get.ill", "Flu.vacc.prevent.baby.ill", "Flu.vacc.prevent.fam.friends.ill", "Vacc.prevent.disease", "Vacc.safe", "Intend.vacc.child.flu", "Intend.vacc.baby", "More.likely.vacc.if.fam.friends.have", "Doc.vacc", "Pharm.vacc", "Nurse.vacc", "Midwife.vacc", "Health.visitor.vacc", "Fam.friend.vacc", "COVID.ill", "COVID.isolate", "COVID.quarantine", "COVID.baby.ill", "COVID.fam.friends.ill", "Knowledgeable.COVID.general", "Knowledgeable.COVID.risk", "I.am.risk.getting.COVID", "Fam.friends.risk.getting.COVID", "COVID.vacc.protect.me", "COVID.vacc.protect.baby.fam.friends", "Would.vacc.baby.COVID", "If.COVID.vacc.seasonal.would.have", "Would.have.COVID.vacc.if.not.preg")
+
+colnames(full_Q2) <- names_Q2
+
+#set date fields
+full_Q2$Completion.Date <- as.Date(full_Q2$Completion.Date, origin = "1899-12-30")
+full_Q2$yearmonth<-format(full_Q2$Completion.Date,"%Y%m")
+
+#completion date
+full_Q2$monthresponse<-format(full_Q2$Completion.Date, '%B')
+full_Q2$monthresponse<-as.factor(full_Q2$monthresponse)
+
+#check number of rows
+
+nrow(full_Q2)
+
+#remove outliers for age
+full_Q2$Age <- as.numeric(full_Q2$Age)
+full1_Q2 <- subset(full_Q2, Age<70&!is.na(Age))
+
+
+
+#postcodes
+full1_Q2$Postcode<-substr(full1_Q2$Postcode, 1, 4)
+full1_Q2$Postcode<-toupper(full1_Q2$Postcode)
+
+full1_Q2 <- subset(full1_Q2, subset=(Postcode!="WA5" & Postcode!="SK11" & Postcode!="CW8" & Postcode!="M28" & Postcode!="WA1" & Postcode!="WA4" & Postcode!="ST7"))
+
+#check rows
+nrow(full1_Q2)
+
+#remove non-pregnant check for numenic (<0, is it blank?)
+#full1_Q2 <- subset(full1_Q2, Weeks.pregnant != -1)
+#blank
+full1_Q2$Weeks.pregnant[full1_Q2$Weeks.pregnant==-1]<- "No response"
+
+
+
+
+#identify and remove duplicates
+#duplicated()
+#unique()
+#full1_Q2<- subset(full1_Q2, !duplicated(full1_Q2[, !names(full1_Q2) %in% "URN"]))
+#unique apart from urn
+#full1_Q2<- unique()
+
+#full1_Q2 <- unique(full1_Q2[, -which(names(full1_Q2) == "URN")])
+#remove duplicate responses excluding URN and Unique Response Number columns
+full1_Q2 <- full1_Q2[!duplicated(full1_Q2[c(2:81, 83:130)]), ]
+
+#check rows
+nrow(full1_Q2)
+
+#relabel income
+full1_Q2$Income<-as.factor(full1_Q2$Income)
+levels(full1_Q2$Income)<-c("<£10,000", "£10,001-20,000", "£20,001-30,000","£30,001-45,000","£45,001-60,000",">£60,000")
+
+##create a new field for income and recode
+full1_Q2$Income2<-as.character(full1_Q2$Income)
+full1_Q2$Income2[full1_Q2$Income2 =="<£10,000" | full1_Q2$Income2 =="£10,001-20,000" | full1_Q2$Income2 =="£20,001-30,000"]<-"<=£30,000"
+full1_Q2$Income2[full1_Q2$Income =="£30,001-45,000" |full1_Q2$Income =="£45,001-60,000"]<-"£30,001-60,000"
+
+full1_Q2$Income2<-as.factor(full1_Q2$Income2)
+levels(full1_Q2$Income2)
+full1_Q2$Income2<-factor(full1_Q2$Income2,levels(full1_Q2$Income2)[c(2,1,3)])
+levels(full1_Q2$Income2)
+
+
+#recode occupation
+full1_Q2$Occupation2 <- NA
+
+full1_Q2$Occupation2[full1_Q2$Occupation== "Radiographer" | full1_Q2$Occupation== "Office manager" | full1_Q2$Occupation== "Careers adviser" | full1_Q2$Occupation == "Admin" | full1_Q2$Occupation == "Doctor" | full1_Q2$Occupation == "Nurse" | full1_Q2$Occupation == "Primary School Teacher" | full1_Q2$Occupation == "Money Advice Supervisor" | full1_Q2$Occupation == "Regulatory Scientist" | full1_Q2$Occupation == "Account Manager" | full1_Q2$Occupation == "Probatioon Case Coordinator" | full1_Q2$Occupation == "Lawyer" | full1_Q2$Occupation == "Office Administrator" | full1_Q2$Occupation == "Secondary teacher" | full1_Q2$Occupation == "Social worker" | full1_Q2$Occupation == "Health Care Assistant" | full1_Q2$Occupation == "Child health assistant" | full1_Q2$Occupation == "Bank Staff" | full1_Q2$Occupation == "Teacher" | full1_Q2$Occupation == "Staff nurse" | full1_Q2$Occupation == "Team leader" | full1_Q2$Occupation == "Employment officer" | full1_Q2$Occupation == "Early help family worker" | full1_Q2$Occupation == "Ward manager" | full1_Q2$Occupation == "Civil servant" | full1_Q2$Occupation == "Medicines Buyer for NHS" | full1_Q2$Occupation == "Pharmacy Technician" | full1_Q2$Occupation == "HR Manager" | full1_Q2$Occupation == "Environmental Health Officee" | full1_Q2$Occupation == "Social worker - charity sector" | full1_Q2$Occupation == "Communications Officer" | full1_Q2$Occupation == "Project manager" | full1_Q2$Occupation == "Assistant head" | full1_Q2$Occupation == "Senior risk analyst, civil service" | full1_Q2$Occupation == "Social Worker" | full1_Q2$Occupation == "University Researcher" | full1_Q2$Occupation == "Team Leader" | full1_Q2$Occupation == "Restauranteur" | full1_Q2$Occupation == "Administrator" | full1_Q2$Occupation == "Support Services Manager" |full1_Q2$Occupation == "Teaching assitant" | full1_Q2$Occupation == "Healthcare assistant" | full1_Q2$Occupation == "Manager" | full1_Q2$Occupation == "Specialist nurse" | full1_Q2$Occupation == "Mental health support worker"] <- "More advantaged groups NS-SEC groups 1-4"
+                    
+full1_Q2$Occupation2[full1_Q2$Occupation == "University Administrator" | full1_Q2$Occupation == "Accountant" | full1_Q2$Occupation == "Buying Assistant" | full1_Q2$Occupation == "Warehouse operating" | full1_Q2$Occupation == "Midwife" | full1_Q2$Occupation == "Clerical admin officer" | full1_Q2$Occupation == "Teaching Assistant" | full1_Q2$Occupation == "Customer service" | full1_Q2$Occupation == "Health and safety manager" | full1_Q2$Occupation == "Radiotherapist" | full1_Q2$Occupation == "Clinical psychologist" | full1_Q2$Occupation == "PDRA" | full1_Q2$Occupation == "Sonographer" | full1_Q2$Occupation == "Post office assitant" | full1_Q2$Occupation == "Merchandiser" | full1_Q2$Occupation == "Building surveyor" | full1_Q2$Occupation == "Registered Nurse" | full1_Q2$Occupation == "Data Technician" | full1_Q2$Occupation == "Police officer" | full1_Q2$Occupation == "Paediatric doctor" | full1_Q2$Occupation == "Business owner" | full1_Q2$Occupation == "ICT Programme Manager" | full1_Q2$Occupation == "Marketing Manager" | full1_Q2$Occupation == "NHS manager" | full1_Q2$Occupation == "Senior Chartered Building Surveyor" | full1_Q2$Occupation == "Optometrist" | full1_Q2$Occupation == "Lecturer" | full1_Q2$Occupation == "Civil servent" | full1_Q2$Occupation == "Civil servant" | full1_Q2$Occupation == "Assitant chief engineer" | full1_Q2$Occupation == "Clinical Psychologist" | full1_Q2$Occupation == "Finance Officer" | full1_Q2$Occupation == "Veterinary nurse RVN" | full1_Q2$Occupation == "Head of department" | full1_Q2$Occupation == "Data analyst"] <- "More advantaged groups NS-SEC groups 1-4"
+                  
+full1_Q2$Occupation2[full1_Q2$Occupation == "GP" | full1_Q2$Occupation == "Structural Engineer" | full1_Q2$Occupation == "Nursery nurse" | full1_Q2$Occupation == "Admin assistant" | full1_Q2$Occupation == "Procurement Manager" | full1_Q2$Occupation == "Admin manager" | full1_Q2$Occupation == "Internal recruitment consultant" | full1_Q2$Occupation == "Admin Assistant" | full1_Q2$Occupation == "Research Associate" | full1_Q2$Occupation == "Policy Officer" | full1_Q2$Occupation == "Retail supevisor" | full1_Q2$Occupation == "Salon Owner" | full1_Q2$Occupation == "Scientist" | full1_Q2$Occupation == "Bank advocate" | full1_Q2$Occupation == "RMN NHS" | full1_Q2$Occupation == "Senior Digital Service Delivery Manager" | full1_Q2$Occupation == "Hr officer" | full1_Q2$Occupation == "Retail manager" | full1_Q2$Occupation == "Senior Nurse Practitioner" | full1_Q2$Occupation == "Human Resources" | full1_Q2$Occupation == "Self Employed" | full1_Q2$Occupation == "System Support Team Manager" | full1_Q2$Occupation == "Paediatric nurse" | full1_Q2$Occupation == "Educational psychologist" | full1_Q2$Occupation == "social worker" | full1_Q2$Occupation == "Learning support officer SEN" | full1_Q2$Occupation == "Education" | full1_Q2$Occupation == "Veterinary Nurse" | full1_Q2$Occupation == "Engineer" | full1_Q2$Occupation == "NHS project co ordinator" | full1_Q2$Occupation == "Military" | full1_Q2$Occupation == "Speech and language therapist"| full1_Q2$Occupation == "Quality Manager"] <- "More advantaged groups NS-SEC groups 1-4"
+
+full1_Q2$Occupation2[is.na(full1_Q2$Occupation2)] <- "Less advantaged groups NS-SEC groups 5-8"
+
+
+full1_Q2$Occupation2[full1_Q2$Occupation=="PhD student" | full1_Q2$Occupation == "PhD Student / Librarian" | full1_Q2$Occupation == "No" | full1_Q2$Occupation == "Uni student" | full1_Q2$Occupation == "Vicar" | full1_Q2$Occupation == "Supervisor" | full1_Q2$Occupation == "123" | full1_Q2$Occupation == "Student" |is.na(full1_Q2$Occupation)]<-"Exceptions"
+
+
+#reorder SEC
+full1_Q2$Occupation2<-as.factor(full1_Q2$Occupation2)
+levels(full1_Q2$Occupation2)
+full1_Q2$Occupation2<-factor(full1_Q2$Occupation2,levels(full1_Q2$Occupation2)[c(3,2,1)])
+levels(full1_Q2$Occupation2)
+
+
+
+#Create a new field for ethnicity
+full1_Q2$Ethnicity2<-"Ethnically Diverse"
+full1_Q2$Ethnicity2[full1_Q2$Ethnicity=="1"]<-"White British"
+full1_Q2$Ethnicity2[full1_Q2$Ethnicity=="2" | full1_Q2$Ethnicity=="3" | full1_Q2$Ethnicity=="4"]<-"White Other"
+
+#reorder ethnicity
+full1_Q2$Ethnicity2<-as.factor(full1_Q2$Ethnicity2)
+levels(full1_Q2$Ethnicity2)
+full1_Q2$Ethnicity2<-factor(full1_Q2$Ethnicity2,levels(full1_Q2$Ethnicity2)[c(2,3,1)])
+levels(full1_Q2$Ethnicity2)
+
+
+#create new field for number in household
+full1_Q2$No.in.household2<-NA
+full1_Q2$No.in.household2[full1_Q2$No.in.household=="1"]<-"1"
+full1_Q2$No.in.household2[full1_Q2$No.in.household=="2"]<-"2"
+full1_Q2$No.in.household2[full1_Q2$No.in.household=="3"]<-"3"
+full1_Q2$No.in.household2[full1_Q2$No.in.household=="4" | full1_Q2$No.in.household=="5" | full1_Q2$No.in.household=="8"]<-"4+"
+
+#check order for number in household
+full1_Q2$No.in.household2<-as.factor(full1_Q2$No.in.household2)
+levels(full1_Q2$No.in.household2)
+
+
+#create new field for number of children
+full1_Q2$No.of.children2<-NA
+full1_Q2$No.of.children2[full1_Q2$No.of.children=="1"]<-"This is my first"
+full1_Q2$No.of.children2[full1_Q2$No.of.children=="2"]<-"1"
+full1_Q2$No.of.children2[full1_Q2$No.of.children=="3"]<-"2"
+full1_Q2$No.of.children2[full1_Q2$No.of.children=="4" | full1_Q2$No.of.children=="5"]<-"3+"
+
+#reorder number of children
+full1_Q2$No.of.children2<-as.factor(full1_Q2$No.of.children2)
+levels(full1_Q2$No.of.children2)
+full1_Q2$No.of.children2<-factor(full1_Q2$No.of.children2,levels(full1_Q2$No.of.children2)[c(4,1,2,3)])
+levels(full1_Q2$No.of.children2)
+
+
+#put weeks pregnant in numeric
+full1_Q2$Weeks.pregnant<-as.numeric(full1_Q2$Weeks.pregnant)
+
+
+#pertussis
+full1_Q2$Pertussis<-NA
+full1_Q2$Pertussis[full1_Q2$Pertuss.vacc.yes=="1"]<-"Yes"
+full1_Q2$Pertussis[full1_Q2$Pertuss.vacc.no=="1"]<-"No"
+
+#reorder pertussis
+full1_Q2$Pertussis<-as.factor(full1_Q2$Pertussis)
+levels(full1_Q2$Pertussis)
+full1_Q2$Pertussis<-factor(full1_Q2$Pertussis,levels(full1_Q2$Pertussis)[c(2,1)])
+levels(full1_Q2$Pertussis)
+
+
+#recode education
+full1_Q2$Education2<-NA
+full1_Q2$Education2[full1_Q2$Education.Lvl=="1"]<-"Below GCSE"
+full1_Q2$Education2[full1_Q2$Education.Lvl=="2"]<-"GCSE or similar"
+full1_Q2$Education2[full1_Q2$Education.Lvl=="3"]<-"NVQ or similar"
+full1_Q2$Education2[full1_Q2$Education.Lvl=="4"]<-"A-level or similar"
+full1_Q2$Education2[full1_Q2$Education.Lvl=="5"]<-"Undergraduate"
+full1_Q2$Education2[full1_Q2$Education.Lvl=="6"]<-"Postgraduate"
+full1_Q2$Education2[full1_Q2$Education.Lvl=="7"]<-"Other"
+
+#reorder education
+full1_Q2$Education2<-as.factor(full1_Q2$Education2)
+levels(full1_Q2$Education2)
+full1_Q2$Education2<-factor(full1_Q2$Education2,levels(full1_Q2$Education2)[c(2,3,1,6,5,4)])
+levels(full1_Q2$Education2)
+
+
+#previous pregnancy
+full1_Q2$Prev.pregnancy2 <- NA
+full1_Q2$Prev.pregnancy2[full1_Q2$Prev.pregnancy=="1"]<-"Yes"
+full1_Q2$Prev.pregnancy2[full1_Q2$Prev.pregnancy=="2"]<- "No"
+
+#recode previous pregnancy
+full1_Q2$Prev.pregnancy2<-as.factor(full1_Q2$Prev.pregnancy2)
+levels(full1_Q2$Prev.pregnancy2)
+full1_Q2$Prev.pregnancy2<-factor(full1_Q2$Prev.pregnancy2,levels(full1_Q2$Prev.pregnancy2)[c(2,1)])
+levels(full1_Q2$Prev.pregnancy2)
+
+
+#new flu vaccine field
+full1_Q2$final.flu.vacc.this.Preg<-NA
+full1_Q2$final.flu.vacc.this.Preg <- full1_Q2$Flu.vacc.this.preg
+full1_Q2$final.flu.vacc.this.Preg[full1_Q2$Flu.vacc.this.preg=="2" & full1_Q2$If.no.intend=="1"] <- "1"
+table(full1_Q2$Flu.vacc.this.preg,full1_Q2$If.no.intend)
+
+
+#recode OTC medicine
+full1_Q2$OTC.meds.flu2<-NA
+full1_Q2$OTC.meds.flu2[full1_Q2$OTC.meds.flu=="1"]<-"Yes"
+full1_Q2$OTC.meds.flu2[full1_Q2$OTC.meds.flu=="2"]<-"No"
+
+#reorder OTC medicine
+full1_Q2$OTC.meds.flu2<-as.factor(full1_Q2$OTC.meds.flu2)
+levels(full1_Q2$OTC.meds.flu2)
+full1_Q2$OTC.meds.flu2<-factor(full1_Q2$OTC.meds.flu2,levels(full1_Q2$OTC.meds.flu2)[c(2,1)])
+levels(full1_Q2$OTC.meds.flu2)
+
+
+#recode alternative flu medicine
+full1_Q2$Alt.med.flu2<-NA
+full1_Q2$Alt.med.flu2[full1_Q2$Alt.med.flu=="1"]<-"Yes"
+full1_Q2$Alt.med.flu2[full1_Q2$Alt.med.flu=="2"]<-"No"
+
+#reorder alternative flu medicine
+full1_Q2$Alt.med.flu2<-as.factor(full1_Q2$Alt.med.flu2)
+levels(full1_Q2$Alt.med.flu2)
+full1_Q2$Alt.med.flu2<-factor(full1_Q2$Alt.med.flu2,levels(full1_Q2$Alt.med.flu2)[c(2,1)])
+levels(full1_Q2$Alt.med.flu2)
+
+
+#recode antenatal vitamins
+full1_Q2$Antenatal.vitamins2<-NA
+full1_Q2$Antenatal.vitamins2[full1_Q2$Antenatal.vitamins=="1"]<-"Yes"
+full1_Q2$Antenatal.vitamins2[full1_Q2$Antenatal.vitamins=="2"]<-"No"
+
+#reorder antenatal vitamins
+full1_Q2$Antenatal.vitamins2<-as.factor(full1_Q2$Antenatal.vitamins2)
+levels(full1_Q2$Antenatal.vitamins2)
+full1_Q2$Antenatal.vitamins2<-factor(full1_Q2$Antenatal.vitamins2,levels(full1_Q2$Antenatal.vitamins2)[c(2,1)])
+levels(full1_Q2$Antenatal.vitamins2)
+
+
+#recode folic acid
+full1_Q2$Folic.acid2<-NA
+full1_Q2$Folic.acid2[full1_Q2$Folic.acid=="1"]<-"Yes"
+full1_Q2$Folic.acid2[full1_Q2$Folic.acid=="2"]<-"No"
+
+#reorder folic acid
+full1_Q2$Folic.acid2<-as.factor(full1_Q2$Folic.acid2)
+levels(full1_Q2$Folic.acid2)
+full1_Q2$Folic.acid2<-factor(full1_Q2$Folic.acid2,levels(full1_Q2$Folic.acid2)[c(2,1)])
+levels(full1_Q2$Folic.acid2)
+
+
+#recode high risk
+full1_Q2$High.risk2<-NA
+full1_Q2$High.risk2[full1_Q2$High.risk=="1"]<-"Yes"
+full1_Q2$High.risk2[full1_Q2$High.risk=="2"]<-"No"
+
+#reorder high risk
+full1_Q2$High.risk2<-as.factor(full1_Q2$High.risk2)
+levels(full1_Q2$High.risk2)
+full1_Q2$High.risk2<-factor(full1_Q2$High.risk2,levels(full1_Q2$High.risk2)[c(2,1)])
+levels(full1_Q2$High.risk2)
+
+
+#recode covid vax status/doses
+full1_Q2$Have.you.had.COVID.vacc2 <- NA
+full1_Q2$Have.you.had.COVID.vacc2[full1_Q2$Have.you.had.COVID.vacc=="1"]<-"No"
+full1_Q2$Have.you.had.COVID.vacc2[full1_Q2$Have.you.had.COVID.vacc=="2"]<-"1 dose"
+full1_Q2$Have.you.had.COVID.vacc2[full1_Q2$Have.you.had.COVID.vacc=="3"]<-"2 doses"
+full1_Q2$Have.you.had.COVID.vacc2 <- as.character(full1_Q2$Have.you.had.COVID.vacc2)  #convert the factor to character
+full1_Q2$Have.you.had.COVID.vacc2[is.na(full1_Q2$Have.you.had.COVID.vacc2)] <- "No Response"
+
+#reorder covid vax status/doses
+full1_Q2$Have.you.had.COVID.vacc2<-as.factor(full1_Q2$Have.you.had.COVID.vacc2)
+levels(full1_Q2$Have.you.had.COVID.vacc2)
+full1_Q2$Have.you.had.COVID.vacc2<- factor(full1_Q2$Have.you.had.COVID.vacc2,levels(full1_Q2$Have.you.had.COVID.vacc2)[c(2,1,3,4)])
+levels(full1_Q2$Have.you.had.COVID.vacc2)
+
+#recode when did you receive covid vax for 1 dose answer
+full1_Q2$If.1.dose.did.receive.prior.to.preg2 <- NA
+full1_Q2$If.1.dose.did.receive.prior.to.preg2[full1_Q2$If.1.dose.did.receive.prior.to.preg=="1"]<-"Yes"
+full1_Q2$If.1.dose.did.receive.prior.to.preg2[full1_Q2$If.1.dose.did.receive.prior.to.preg=="2"]<-"No"
+
+#reorder when did you receive covid vax for 1 dose answer
+full1_Q2$If.1.dose.did.receive.prior.to.preg2<-as.factor(full1_Q2$If.1.dose.did.receive.prior.to.preg2)
+levels(full1_Q2$If.1.dose.did.receive.prior.to.preg2)
+full1_Q2$If.1.dose.did.receive.prior.to.preg2<- factor(full1_Q2$If.1.dose.did.receive.prior.to.preg2,levels(full1_Q2$If.1.dose.did.receive.prior.to.preg2)[c(2,1)])
+levels(full1_Q2$If.1.dose.did.receive.prior.to.preg2)
+
+#recode when did you receive covid vax for 2 doses answer
+full1_Q2$If.2.doses.when.receive2 <- NA
+full1_Q2$If.2.doses.when.receive2[full1_Q2$If.2.doses.when.receive=="1"]<-"Both doses before pregnancy"
+full1_Q2$If.2.doses.when.receive2[full1_Q2$If.2.doses.when.receive=="2"]<-"Both doses during pregnancy"
+full1_Q2$If.2.doses.when.receive2[full1_Q2$If.2.doses.when.receive=="3"]<- "1 dose before pregnancy and 1 dose during pregnancy"
+
+#reorder when did you receive covid vax for 2 doses answer
+full1_Q2$If.2.doses.when.receive2<-as.factor(full1_Q2$If.2.doses.when.receive2)
+levels(full1_Q2$If.2.doses.when.receive2)
+full1_Q2$If.2.doses.when.receive2<- factor(full1_Q2$If.2.doses.when.receive2,levels(full1_Q2$If.2.doses.when.receive2)[c(2,3,1)])
+levels(full1_Q2$If.2.doses.when.receive2)
+
+
+#recode intranasal vax
+full1_Q2$More.less.likely.intranasal2 <- NA
+full1_Q2$More.less.likely.intranasal2[full1_Q2$More.less.likely.intranasal=="1"]<-"More Likely"
+full1_Q2$More.less.likely.intranasal2[full1_Q2$More.less.likely.intranasal=="2"]<-"Less Likely"
+
+#reorder intranasal vax
+full1_Q2$More.less.likely.intranasal2<-as.factor(full1_Q2$More.less.likely.intranasal2)
+levels(full1_Q2$More.less.likely.intranasal2)
+full1_Q2$More.less.likely.intranasal2<-factor(full1_Q2$More.less.likely.intranasal2,levels(full1_Q2$More.less.likely.intranasal2)[c(2,1)])
+levels(full1_Q2$More.less.likely.intranasal2)
+
+
+#recode oral vax
+full1_Q2$More.less.likely.oral2 <- NA
+full1_Q2$More.less.likely.oral2[full1_Q2$More.less.likely.oral=="1"]<-"More Likely"
+full1_Q2$More.less.likely.oral2[full1_Q2$More.less.likely.oral=="2"]<-"Less Likely"
+
+#reorder oral vax
+full1_Q2$More.less.likely.oral2<-as.factor(full1_Q2$More.less.likely.oral2)
+levels(full1_Q2$More.less.likely.oral2)
+full1_Q2$More.less.likely.oral2<-factor(full1_Q2$More.less.likely.oral2,levels(full1_Q2$More.less.likely.oral2)[c(2,1)])
+levels(full1_Q2$More.less.likely.oral2)
+
+
+##recode flu vacc to include those who intend
+full1_Q2$fluyes<-NA
+full1_Q2$fluyes[full1_Q2$Flu.vacc.this.preg==1]<-"1"
+full1_Q2$fluyes[full1_Q2$Flu.vacc.this.preg==2]<-"2"
+full1_Q2$fluyes[full1_Q2$If.no.intend==1]<-"1"
+full1_Q2$fluyes[full1_Q2$If.no.intend==2]<-"2"
+full1_Q2$fluyes[full1_Q2$Flu.vacc.this.preg==2 & is.na(full1_Q2$If.no.intend)]<-NA
+
+#recode fluyes
+full1_Q2$fluyes[full1_Q2$fluyes=="1"]<-"Yes"
+full1_Q2$fluyes[full1_Q2$fluyes=="2"]<-"No"
+full1_Q2$fluyes <- as.character(full1_Q2$fluyes)  #convert the factor to character
+full1_Q2$fluyes[is.na(full1_Q2$fluyes)] <- "No Response"
+
+#reorder fluyes
+full1_Q2$fluyes<-as.factor(full1_Q2$fluyes)
+levels(full1_Q2$fluyes)
+full1_Q2$fluyes<-factor(full1_Q2$fluyes,levels(full1_Q2$fluyes)[c(3,1,2)])
+levels(full1_Q2$fluyes)
+
+
+#reorder month response
+levels(full1_Q2$monthresponse)
+full1_Q2$monthresponse<-factor(full1_Q2$monthresponse,levels(full1_Q2$monthresponse)[c(5,4,8,1,7,6,2,11,10,9,3)])
+levels(full1_Q2$monthresponse)
+
+
+#recode discuss with partner/fam
+full1_Q2$Discuss.vacc.with.partner.fam2<-NA
+full1_Q2$Discuss.vacc.with.partner.fam2[full1_Q2$Discuss.vacc.with.partner.fam=="1"]<-"Yes"
+full1_Q2$Discuss.vacc.with.partner.fam2[full1_Q2$Discuss.vacc.with.partner.fam=="2"]<-"No"
+
+#reoder discuss with parner/fam
+full1_Q2$Discuss.vacc.with.partner.fam2<-as.factor(full1_Q2$Discuss.vacc.with.partner.fam2)
+levels(full1_Q2$Discuss.vacc.with.partner.fam2)
+full1_Q2$Discuss.vacc.with.partner.fam2<-factor(full1_Q2$Discuss.vacc.with.partner.fam2,levels(full1_Q2$Discuss.vacc.with.partner.fam2)[c(2,1)])
+levels(full1_Q2$Discuss.vacc.with.partner.fam2)
+
+#recode smoker
+full1_Q2$Smoker2<-NA
+full1_Q2$Smoker2[full1_Q2$Smoker=="1"]<-"Yes"
+full1_Q2$Smoker2[full1_Q2$Smoker=="2"]<-"No"
+
+#reorder smoker
+full1_Q2$Smoker2<-as.factor(full1_Q2$Smoker2)
+levels(full1_Q2$Smoker2)
+full1_Q2$Smoker2<-factor(full1_Q2$Smoker2,levels(full1_Q2$Smoker2)[c(2,1)])
+levels(full1_Q2$Smoker2)
+
+
+#recode shield
+full1_Q2$Shield2<-NA
+full1_Q2$Shield2[full1_Q2$Shield=="1"]<-"Yes"
+full1_Q2$Smoker2[full1_Q2$Shield=="2"]<-"No"
+
+#reorder shield
+full1_Q2$Shield2<-as.factor(full1_Q2$Shield2)
+levels(full1_Q2$Shield2)
+
+
+#recode smartphone
+full1_Q2$Smartphone2<-NA
+full1_Q2$Smartphone2[full1_Q2$Smartphone=="1"]<-"Yes"
+
+
+#recode exercise before
+full1_Q2$Exercise.before2<-NA
+full1_Q2$Exercise.before2[full1_Q2$Exercise.before=="1"]<-"0 Days"
+full1_Q2$Exercise.before2[full1_Q2$Exercise.before=="2"]<-"1-2 Days"
+full1_Q2$Exercise.before2[full1_Q2$Exercise.before=="3"]<-"3-4 Days"
+full1_Q2$Exercise.before2[full1_Q2$Exercise.before=="4"]<-"5-7 Days"
+
+#reorder exercise before
+full1_Q2$Exercise.before2<-as.factor(full1_Q2$Exercise.before2)
+levels(full1_Q2$Exercise.before2)
+
+#recode exercise currently
+full1_Q2$Exercise.currently2<-NA
+full1_Q2$Exercise.currently2[full1_Q2$Exercise.currently=="1"]<-"0 Days"
+full1_Q2$Exercise.currently2[full1_Q2$Exercise.currently=="2"]<-"1-2 Days"
+full1_Q2$Exercise.currently2[full1_Q2$Exercise.currently=="3"]<-"3-4 Days"
+full1_Q2$Exercise.currently2[full1_Q2$Exercise.currently=="4"]<-"5-7 Days"
+
+#reorder exercise currently
+full1_Q2$Exercise.currently2<-as.factor(full1_Q2$Exercise.currently2)
+levels(full1_Q2$Exercise.currently2)
+
+
+#recode flu vax in previous pregnancy
+full1_Q2$Flu.vacc.prev.preg2<-NA
+full1_Q2$Flu.vacc.prev.preg2[full1_Q2$Flu.vacc.prev.preg=="1"]<-"Yes"
+full1_Q2$Flu.vacc.prev.preg2[full1_Q2$Flu.vacc.prev.preg=="2"]<-"No"
+
+#reorder flu vax in previous pregnancy
+full1_Q2$Flu.vacc.prev.preg2<-as.factor(full1_Q2$Flu.vacc.prev.preg2)
+levels(full1_Q2$Flu.vacc.prev.preg2)
+full1_Q2$Flu.vacc.prev.preg2<-factor(full1_Q2$Flu.vacc.prev.preg2,levels(full1_Q2$Flu.vacc.prev.preg2)[c(2,1)])
+levels(full1_Q2$Flu.vacc.prev.preg2)
+
+
+#recode if yes side effects
+full1_Q2$If.yes.side.effects2<-NA
+full1_Q2$If.yes.side.effects2[full1_Q2$If.yes.side.effects=="1"]<-"Yes"
+full1_Q2$If.yes.side.effects2[full1_Q2$If.yes.side.effects=="2"]<-"No"
+
+#reorder if yes side effects
+full1_Q2$If.yes.side.effects2<-as.factor(full1_Q2$If.yes.side.effects2)
+levels(full1_Q2$If.yes.side.effects2)
+full1_Q2$If.yes.side.effects2<-factor(full1_Q2$If.yes.side.effects2,levels(full1_Q2$If.yes.side.effects2)[c(2,1)])
+levels(full1_Q2$If.yes.side.effects2)
+
+
+#recode you or close friend/fam have had flu
+full1_Q2$You.or.close.friend.fam.flu2<-NA
+full1_Q2$You.or.close.friend.fam.flu2[full1_Q2$You.or.close.friend.fam.flu=="1"]<-"Yes"
+full1_Q2$You.or.close.friend.fam.flu2[full1_Q2$You.or.close.friend.fam.flu=="2"]<-"No"
+
+#reorder you or close friend/fam have had flu
+full1_Q2$You.or.close.friend.fam.flu2<-as.factor(full1_Q2$You.or.close.friend.fam.flu2)
+levels(full1_Q2$You.or.close.friend.fam.flu2)
+full1_Q2$You.or.close.friend.fam.flu2<-factor(full1_Q2$You.or.close.friend.fam.flu2,levels(full1_Q2$You.or.close.friend.fam.flu2)[c(2,1)])
+levels(full1_Q2$You.or.close.friend.fam.flu2)
+
+
+#recode you or close friend/fam have tested positive for COVID
+full1_Q2$You.or.close.friend.fam.pos.COVID <- as.factor(full1_Q2$You.or.close.friend.fam.pos.COVID)
+full1_Q2$You.or.close.friend.fam.pos.COVID2<-NA
+full1_Q2$You.or.close.friend.fam.pos.COVID2[full1_Q2$You.or.close.friend.fam.pos.COVID=="1"]<-"Yes"
+full1_Q2$You.or.close.friend.fam.pos.COVID2[full1_Q2$You.or.close.friend.fam.pos.COVID=="2"]<-"No"
+full1_Q2$You.or.close.friend.fam.pos.COVID2[is.na(full1_Q2$You.or.close.friend.fam.pos.COVID)] <- "No response"
+
+#reorder you or close friend/fam have tested positive for COVID
+full1_Q2$You.or.close.friend.fam.pos.COVID2<-as.factor(full1_Q2$You.or.close.friend.fam.pos.COVID2)
+levels(full1_Q2$You.or.close.friend.fam.pos.COVID2)
+full1_Q2$You.or.close.friend.fam.pos.COVID2<-factor(full1_Q2$You.or.close.friend.fam.pos.COVID2,levels(full1_Q2$You.or.close.friend.fam.pos.COVID2)[c(3,1,2)])
+levels(full1_Q2$You.or.close.friend.fam.pos.COVID2)
+
+
+#recode you or close friend/fam have been hospitalised for COVID
+full1_Q2$You.or.close.friend.fam.hosp.COVID <- as.factor(full1_Q2$You.or.close.friend.fam.hosp.COVID)
+full1_Q2$You.or.close.friend.fam.hosp.COVID2<-NA
+full1_Q2$You.or.close.friend.fam.hosp.COVID2[full1_Q2$You.or.close.friend.fam.hosp.COVID=="1"]<-"Yes"
+full1_Q2$You.or.close.friend.fam.hosp.COVID2[full1_Q2$You.or.close.friend.fam.hosp.COVID=="2"]<-"No"
+full1_Q2$You.or.close.friend.fam.hosp.COVID2[is.na(full1_Q2$You.or.close.friend.fam.hosp.COVID)] <- "No response"
+
+#reorder you or close friend/fam have been hospitalised for COVID
+full1_Q2$You.or.close.friend.fam.hosp.COVID2<-as.factor(full1_Q2$You.or.close.friend.fam.hosp.COVID2)
+levels(full1_Q2$You.or.close.friend.fam.hosp.COVID2)
+full1_Q2$You.or.close.friend.fam.hosp.COVID2<-factor(full1_Q2$You.or.close.friend.fam.hosp.COVID2,levels(full1_Q2$You.or.close.friend.fam.hosp.COVID2)[c(3,1,2)])
+levels(full1_Q2$You.or.close.friend.fam.hosp.COVID2)
+
+
+
+
+
+
+#########################################likert questions###################################################
+
+#recode likert scales
+full1_Q2<-full1_Q2 %>%
+  mutate_at(c(83:128), funs(recode(., `Strongly Disagree`="Disagree", `Disagree`="Disagree", `Neither Agree or Disagree`="Neither Agree or Disagree", `Agree`="Agree", `Strongly Agree`="Agree", .default = as.character(NA))))
+
+
+#reorder likert questions
+full1_Q2$Flu.ill<-as.factor(full1_Q2$Flu.ill)
+levels(full1_Q2$Flu.ill)
+full1_Q2$Flu.ill<-factor(full1_Q2$Flu.ill,levels(full1_Q2$Flu.ill)[c(2,3,1)])
+levels(full1_Q2$Flu.ill)
+#______________________________________________________________________________________________________________
+full1_Q2$Flu.stay.home.work.school<-as.factor(full1_Q2$Flu.stay.home.work.school)
+levels(full1_Q2$Flu.stay.home.work.school)
+full1_Q2$Flu.stay.home.work.school<-factor(full1_Q2$Flu.stay.home.work.school,levels(full1_Q2$Flu.stay.home.work.school)[c(2,3,1)])
+levels(full1_Q2$Flu.stay.home.work.school)
+#______________________________________________________________________________________________________________
+full1_Q2$Flu.baby.ill<-as.factor(full1_Q2$Flu.baby.ill)
+levels(full1_Q2$Flu.baby.ill)
+full1_Q2$Flu.baby.ill<-factor(full1_Q2$Flu.baby.ill,levels(full1_Q2$Flu.baby.ill)[c(2,3,1)])
+levels(full1_Q2$Flu.baby.ill)
+#______________________________________________________________________________________________________________
+full1_Q2$Flu.hurt.baby<-as.factor(full1_Q2$Flu.hurt.baby)
+levels(full1_Q2$Flu.hurt.baby)
+full1_Q2$Flu.hurt.baby<-factor(full1_Q2$Flu.hurt.baby,levels(full1_Q2$Flu.hurt.baby)[c(2,3,1)])
+levels(full1_Q2$Flu.hurt.baby)
+#______________________________________________________________________________________________________________
+full1_Q2$Flu.fam.friends.ill<-as.factor(full1_Q2$Flu.fam.friends.ill)
+levels(full1_Q2$Flu.fam.friends.ill)
+full1_Q2$Flu.fam.friends.ill<-factor(full1_Q2$Flu.fam.friends.ill,levels(full1_Q2$Flu.fam.friends.ill)[c(2,3,1)])
+levels(full1_Q2$Flu.fam.friends.ill)
+#______________________________________________________________________________________________________________
+full1_Q2$Flu.coworkers.colleagues.ill<-as.factor(full1_Q2$Flu.coworkers.colleagues.ill)
+levels(full1_Q2$Flu.coworkers.colleagues.ill)
+full1_Q2$Flu.coworkers.colleagues.ill<-factor(full1_Q2$Flu.coworkers.colleagues.ill,levels(full1_Q2$Flu.ill)[c(2,3,1)])
+levels(full1_Q2$Flu.coworkers.colleagues.ill)
+#______________________________________________________________________________________________________________
+full1_Q2$Flu.die<-as.factor(full1_Q2$Flu.die)
+levels(full1_Q2$Flu.die)
+full1_Q2$Flu.die<-factor(full1_Q2$Flu.die,levels(full1_Q2$Flu.die)[c(2,3,1)])
+levels(full1_Q2$Flu.die)
+#______________________________________________________________________________________________________________
+full1_Q2$Knowledgeable.flu.general<-as.factor(full1_Q2$Knowledgeable.flu.general)
+levels(full1_Q2$Knowledgeable.flu.general)
+full1_Q2$Knowledgeable.flu.general<-factor(full1_Q2$Knowledgeable.flu.general,levels(full1_Q2$Knowledgeable.flu.general)[c(2,3,1)])
+levels(full1_Q2$Knowledgeable.flu.general)
+#______________________________________________________________________________________________________________
+full1_Q2$Knowledgeable.flu.risk<-as.factor(full1_Q2$Knowledgeable.flu.risk)
+levels(full1_Q2$Knowledgeable.flu.risk)
+full1_Q2$Knowledgeable.flu.risk<-factor(full1_Q2$Knowledgeable.flu.risk,levels(full1_Q2$Knowledgeable.flu.risk)[c(2,3,1)])
+levels(full1_Q2$Knowledgeable.flu.risk)
+#______________________________________________________________________________________________________________
+full1_Q2$I.am.risk.getting.flu<-as.factor(full1_Q2$I.am.risk.getting.flu)
+levels(full1_Q2$I.am.risk.getting.flu)
+full1_Q2$I.am.risk.getting.flu<-factor(full1_Q2$I.am.risk.getting.flu,levels(full1_Q2$I.am.risk.getting.flu)[c(2,3,1)])
+levels(full1_Q2$I.am.risk.getting.flu)
+#______________________________________________________________________________________________________________
+full1_Q2$Fam.friends.risk.getting.flu<-as.factor(full1_Q2$Fam.friends.risk.getting.flu)
+levels(full1_Q2$Fam.friends.risk.getting.flu)
+full1_Q2$Fam.friends.risk.getting.flu<-factor(full1_Q2$Fam.friends.risk.getting.flu,levels(full1_Q2$Fam.friends.risk.getting.flu)[c(2,3,1)])
+levels(full1_Q2$Fam.friends.risk.getting.flu)
+#______________________________________________________________________________________________________________
+full1_Q2$Flu.vacc.side.effects<-as.factor(full1_Q2$Flu.vacc.side.effects)
+levels(full1_Q2$Flu.vacc.side.effects)
+full1_Q2$Flu.vacc.side.effects<-factor(full1_Q2$Flu.vacc.side.effects,levels(full1_Q2$Flu.vacc.side.effects)[c(2,3,1)])
+levels(full1_Q2$Flu.vacc.side.effects)
+#______________________________________________________________________________________________________________
+full1_Q2$Flu.vacc.painful<-as.factor(full1_Q2$Flu.vacc.painful)
+levels(full1_Q2$Flu.vacc.painful)
+full1_Q2$Flu.vacc.painful<-factor(full1_Q2$Flu.vacc.painful,levels(full1_Q2$Flu.vacc.painful)[c(2,3,1)])
+levels(full1_Q2$Flu.vacc.painful)
+#______________________________________________________________________________________________________________
+full1_Q2$Flu.vacc.not.protect.me<-as.factor(full1_Q2$Flu.vacc.not.protect.me)
+levels(full1_Q2$Flu.vacc.not.protect.me)
+full1_Q2$Flu.vacc.not.protect.me<-factor(full1_Q2$Flu.vacc.not.protect.me,levels(full1_Q2$Flu.vacc.not.protect.me)[c(2,3,1)])
+levels(full1_Q2$Flu.vacc.not.protect.me)
+#______________________________________________________________________________________________________________
+full1_Q2$Flu.vacc.not.protect.baby<-as.factor(full1_Q2$Flu.vacc.not.protect.baby)
+levels(full1_Q2$Flu.vacc.not.protect.baby)
+full1_Q2$Flu.vacc.not.protect.baby<-factor(full1_Q2$Flu.vacc.not.protect.baby,levels(full1_Q2$Flu.vacc.not.protect.baby)[c(2,3,1)])
+levels(full1_Q2$Flu.vacc.not.protect.baby)
+#______________________________________________________________________________________________________________
+full1_Q2$Inconvenient.flu.vacc<-as.factor(full1_Q2$Inconvenient.flu.vacc)
+levels(full1_Q2$Inconvenient.flu.vacc)
+full1_Q2$Inconvenient.flu.vacc<-factor(full1_Q2$Inconvenient.flu.vacc,levels(full1_Q2$Inconvenient.flu.vacc)[c(2,3,1)])
+levels(full1_Q2$Inconvenient.flu.vacc)
+#______________________________________________________________________________________________________________
+full1_Q2$Shortage.flu.vacc<-as.factor(full1_Q2$Shortage.flu.vacc)
+levels(full1_Q2$Shortage.flu.vacc)
+full1_Q2$Shortage.flu.vacc<-factor(full1_Q2$Shortage.flu.vacc,levels(full1_Q2$Shortage.flu.vacc)[c(2,3,1)])
+levels(full1_Q2$Shortage.flu.vacc)
+#______________________________________________________________________________________________________________
+full1_Q2$Flu.vacc.recommended<-as.factor(full1_Q2$Flu.vacc.recommended)
+levels(full1_Q2$Flu.vacc.recommended)
+full1_Q2$Flu.vacc.recommended<-factor(full1_Q2$Flu.vacc.recommended,levels(full1_Q2$Flu.vacc.recommended)[c(2,3,1)])
+levels(full1_Q2$Flu.vacc.recommended)
+#______________________________________________________________________________________________________________
+full1_Q2$Flu.vacc.not.get.ill<-as.factor(full1_Q2$Flu.vacc.not.get.ill)
+levels(full1_Q2$Flu.vacc.not.get.ill)
+full1_Q2$Flu.vacc.not.get.ill<-factor(full1_Q2$Flu.vacc.not.get.ill,levels(full1_Q2$Flu.vacc.not.get.ill)[c(2,3,1)])
+levels(full1_Q2$Flu.vacc.not.get.ill)
+#______________________________________________________________________________________________________________
+full1_Q2$Flu.vacc.prevent.baby.ill<-as.factor(full1_Q2$Flu.vacc.prevent.baby.ill)
+levels(full1_Q2$Flu.vacc.prevent.baby.ill)
+full1_Q2$Flu.vacc.prevent.baby.ill<-factor(full1_Q2$Flu.vacc.prevent.baby.ill,levels(full1_Q2$Flu.vacc.prevent.baby.ill)[c(2,3,1)])
+levels(full1_Q2$Flu.vacc.prevent.baby.ill)
+#______________________________________________________________________________________________________________
+full1_Q2$Flu.vacc.prevent.fam.friends.ill<-as.factor(full1_Q2$Flu.vacc.prevent.fam.friends.ill)
+levels(full1_Q2$Flu.vacc.prevent.fam.friends.ill)
+full1_Q2$Flu.vacc.prevent.fam.friends.ill<-factor(full1_Q2$Flu.vacc.prevent.fam.friends.ill,levels(full1_Q2$Flu.vacc.prevent.fam.friends.ill)[c(2,3,1)])
+levels(full1_Q2$Flu.vacc.prevent.fam.friends.ill)
+#______________________________________________________________________________________________________________
+full1_Q2$Vacc.prevent.disease<-as.factor(full1_Q2$Vacc.prevent.disease)
+levels(full1_Q2$Vacc.prevent.disease)
+full1_Q2$Vacc.prevent.disease<-factor(full1_Q2$Vacc.prevent.disease,levels(full1_Q2$Vacc.prevent.disease)[c(2,3,1)])
+levels(full1_Q2$Vacc.prevent.disease)
+#______________________________________________________________________________________________________________
+full1_Q2$Vacc.safe<-as.factor(full1_Q2$Vacc.safe)
+levels(full1_Q2$Vacc.safe)
+full1_Q2$Vacc.safe<-factor(full1_Q2$Vacc.safe,levels(full1_Q2$Vacc.safe)[c(2,3,1)])
+levels(full1_Q2$Vacc.safe)
+#______________________________________________________________________________________________________________
+full1_Q2$Intend.vacc.child.flu<-as.factor(full1_Q2$Intend.vacc.child.flu)
+levels(full1_Q2$Intend.vacc.child.flu)
+full1_Q2$Intend.vacc.child.flu<-factor(full1_Q2$Intend.vacc.child.flu,levels(full1_Q2$Intend.vacc.child.flu)[c(2,3,1)])
+levels(full1_Q2$Intend.vacc.child.flu)
+#______________________________________________________________________________________________________________
+full1_Q2$Intend.vacc.baby<-as.factor(full1_Q2$Intend.vacc.baby)
+levels(full1_Q2$Intend.vacc.baby)
+full1_Q2$Intend.vacc.baby<-factor(full1_Q2$Intend.vacc.baby,levels(full1_Q2$Intend.vacc.baby)[c(2,3,1)])
+levels(full1_Q2$Intend.vacc.baby)
+#______________________________________________________________________________________________________________
+full1_Q2$More.likely.vacc.if.fam.friends.have<-as.factor(full1_Q2$More.likely.vacc.if.fam.friends.have)
+levels(full1_Q2$More.likely.vacc.if.fam.friends.have)
+full1_Q2$More.likely.vacc.if.fam.friends.have<-factor(full1_Q2$More.likely.vacc.if.fam.friends.have,levels(full1_Q2$More.likely.vacc.if.fam.friends.have)[c(2,3,1)])
+levels(full1_Q2$More.likely.vacc.if.fam.friends.have)
+#______________________________________________________________________________________________________________
+full1_Q2$Doc.vacc<-as.factor(full1_Q2$Doc.vacc)
+levels(full1_Q2$Doc.vacc)
+full1_Q2$Doc.vacc<-factor(full1_Q2$Doc.vacc,levels(full1_Q2$Doc.vacc)[c(2,3,1)])
+levels(full1_Q2$Doc.vacc)
+#______________________________________________________________________________________________________________
+full1_Q2$Pharm.vacc<-as.factor(full1_Q2$Pharm.vacc)
+levels(full1_Q2$Pharm.vacc)
+full1_Q2$Pharm.vacc<-factor(full1_Q2$Pharm.vacc,levels(full1_Q2$Pharm.vacc)[c(2,3,1)])
+levels(full1_Q2$Pharm.vacc)
+#______________________________________________________________________________________________________________
+full1_Q2$Nurse.vacc<-as.factor(full1_Q2$Nurse.vacc)
+levels(full1_Q2$Nurse.vacc)
+full1_Q2$Nurse.vacc<-factor(full1_Q2$Nurse.vacc,levels(full1_Q2$Nurse.vacc)[c(2,3,1)])
+levels(full1_Q2$Nurse.vacc)
+#______________________________________________________________________________________________________________
+full1_Q2$Midwife.vacc<-as.factor(full1_Q2$Midwife.vacc)
+levels(full1_Q2$Midwife.vacc)
+full1_Q2$Midwife.vacc<-factor(full1_Q2$Midwife.vacc,levels(full1_Q2$Midwife.vacc)[c(2,3,1)])
+levels(full1_Q2$Midwife.vacc)
+#______________________________________________________________________________________________________________
+full1_Q2$Health.visitor.vacc<-as.factor(full1_Q2$Health.visitor.vacc)
+levels(full1_Q2$Health.visitor.vacc)
+full1_Q2$Health.visitor.vacc<-factor(full1_Q2$Health.visitor.vacc,levels(full1_Q2$Health.visitor.vacc)[c(2,3,1)])
+levels(full1_Q2$Health.visitor.vacc)
+#______________________________________________________________________________________________________________
+full1_Q2$Fam.friend.vacc<-as.factor(full1_Q2$Fam.friend.vacc)
+levels(full1_Q2$Fam.friend.vacc)
+full1_Q2$Fam.friend.vacc<-factor(full1_Q2$Fam.friend.vacc,levels(full1_Q2$Fam.friend.vacc)[c(2,3,1)])
+levels(full1_Q2$Fam.friend.vacc)
+#______________________________________________________________________________________________________________
+full1_Q2$COVID.ill<-as.factor(full1_Q2$COVID.ill)
+levels(full1_Q2$COVID.ill)
+full1_Q2$COVID.ill<-factor(full1_Q2$COVID.ill,levels(full1_Q2$COVID.ill)[c(2,3,1)])
+levels(full1_Q2$COVID.ill)
+#______________________________________________________________________________________________________________
+full1_Q2$COVID.isolate<-as.factor(full1_Q2$COVID.isolate)
+levels(full1_Q2$COVID.isolate)
+full1_Q2$COVID.isolate<-factor(full1_Q2$COVID.isolate,levels(full1_Q2$COVID.isolate)[c(2,3,1)])
+levels(full1_Q2$COVID.isolate)
+#______________________________________________________________________________________________________________
+full1_Q2$COVID.quarantine<-as.factor(full1_Q2$COVID.quarantine)
+levels(full1_Q2$COVID.quarantine)
+full1_Q2$COVID.quarantine<-factor(full1_Q2$COVID.quarantine,levels(full1_Q2$COVID.quarantine)[c(2,3,1)])
+levels(full1_Q2$COVID.quarantine)
+#______________________________________________________________________________________________________________
+full1_Q2$COVID.baby.ill<-as.factor(full1_Q2$COVID.baby.ill)
+levels(full1_Q2$COVID.baby.ill)
+full1_Q2$COVID.baby.ill<-factor(full1_Q2$COVID.baby.ill,levels(full1_Q2$COVID.baby.ill)[c(2,3,1)])
+levels(full1_Q2$COVID.baby.ill)
+#______________________________________________________________________________________________________________
+full1_Q2$COVID.fam.friends.ill<-as.factor(full1_Q2$COVID.fam.friends.ill)
+levels(full1_Q2$COVID.fam.friends.ill)
+full1_Q2$COVID.fam.friends.ill<-factor(full1_Q2$COVID.fam.friends.ill,levels(full1_Q2$COVID.fam.friends.ill)[c(2,3,1)])
+levels(full1_Q2$COVID.fam.friends.ill)
+#______________________________________________________________________________________________________________
+full1_Q2$Knowledgeable.COVID.general<-as.factor(full1_Q2$Knowledgeable.COVID.general)
+levels(full1_Q2$Knowledgeable.COVID.general)
+full1_Q2$Knowledgeable.COVID.general<-factor(full1_Q2$Knowledgeable.COVID.general,levels(full1_Q2$Knowledgeable.COVID.general)[c(2,3,1)])
+levels(full1_Q2$Knowledgeable.COVID.general)
+#______________________________________________________________________________________________________________
+full1_Q2$Knowledgeable.COVID.risk<-as.factor(full1_Q2$Knowledgeable.COVID.risk)
+levels(full1_Q2$Knowledgeable.COVID.risk)
+full1_Q2$Knowledgeable.COVID.risk<-factor(full1_Q2$Knowledgeable.COVID.risk,levels(full1_Q2$Knowledgeable.COVID.risk)[c(2,3,1)])
+levels(full1_Q2$Knowledgeable.COVID.risk)
+#______________________________________________________________________________________________________________
+full1_Q2$I.am.risk.getting.COVID<-as.factor(full1_Q2$I.am.risk.getting.COVID)
+levels(full1_Q2$I.am.risk.getting.COVID)
+full1_Q2$I.am.risk.getting.COVID<-factor(full1_Q2$I.am.risk.getting.COVID,levels(full1_Q2$I.am.risk.getting.COVID)[c(2,3,1)])
+levels(full1_Q2$I.am.risk.getting.COVID)
+#______________________________________________________________________________________________________________
+full1_Q2$Fam.friends.risk.getting.COVID<-as.factor(full1_Q2$Fam.friends.risk.getting.COVID)
+levels(full1_Q2$Fam.friends.risk.getting.COVID)
+full1_Q2$Fam.friends.risk.getting.COVID<-factor(full1_Q2$Fam.friends.risk.getting.COVID,levels(full1_Q2$Fam.friends.risk.getting.COVID)[c(2,3,1)])
+levels(full1_Q2$Fam.friends.risk.getting.COVID)
+#______________________________________________________________________________________________________________
+full1_Q2$COVID.vacc.protect.me<-as.factor(full1_Q2$COVID.vacc.protect.me)
+levels(full1_Q2$COVID.vacc.protect.me)
+full1_Q2$COVID.vacc.protect.me<-factor(full1_Q2$COVID.vacc.protect.me,levels(full1_Q2$COVID.vacc.protect.me)[c(2,3,1)])
+levels(full1_Q2$COVID.vacc.protect.me)
+#______________________________________________________________________________________________________________
+full1_Q2$COVID.vacc.protect.baby.fam.friends<-as.factor(full1_Q2$COVID.vacc.protect.baby.fam.friends)
+levels(full1_Q2$COVID.vacc.protect.baby.fam.friends)
+full1_Q2$COVID.vacc.protect.baby.fam.friends<-factor(full1_Q2$COVID.vacc.protect.baby.fam.friends,levels(full1_Q2$COVID.vacc.protect.baby.fam.friends)[c(2,3,1)])
+levels(full1_Q2$COVID.vacc.protect.baby.fam.friends)
+#______________________________________________________________________________________________________________
+full1_Q2$Would.vacc.baby.COVID<-as.factor(full1_Q2$Would.vacc.baby.COVID)
+levels(full1_Q2$Would.vacc.baby.COVID)
+full1_Q2$Would.vacc.baby.COVID<-factor(full1_Q2$Would.vacc.baby.COVID,levels(full1_Q2$Would.vacc.baby.COVID)[c(2,3,1)])
+levels(full1_Q2$Would.vacc.baby.COVID)
+#______________________________________________________________________________________________________________
+full1_Q2$If.COVID.vacc.seasonal.would.have<-as.factor(full1_Q2$If.COVID.vacc.seasonal.would.have)
+levels(full1_Q2$If.COVID.vacc.seasonal.would.have)
+full1_Q2$If.COVID.vacc.seasonal.would.have<-factor(full1_Q2$If.COVID.vacc.seasonal.would.have,levels(full1_Q2$If.COVID.vacc.seasonal.would.have)[c(2,3,1)])
+levels(full1_Q2$If.COVID.vacc.seasonal.would.have)
+#______________________________________________________________________________________________________________
+full1_Q2$Would.have.COVID.vacc.if.not.preg<-as.factor(full1_Q2$Would.have.COVID.vacc.if.not.preg)
+levels(full1_Q2$Would.have.COVID.vacc.if.not.preg)
+full1_Q2$Would.have.COVID.vacc.if.not.preg<-factor(full1_Q2$Would.have.COVID.vacc.if.not.preg,levels(full1_Q2$COVID.ill)[c(2,3,1)])
+levels(full1_Q2$Would.have.COVID.vacc.if.not.preg)
+
+
+
+
+
+
+
+
+###############################################descriptive tables###############################################
+
+
+table1(~ Flu.vacc.this.preg + If.no.intend + Flu.vacc.prev.preg + If.yes.side.effects, data=full1_Q2)
+
+table1(~ Have.you.had.COVID.vacc2 | You.or.close.friend.fam.pos.COVID2, data=full1_Q2)
+
+table1(~ Have.you.had.COVID.vacc2 | You.or.close.friend.fam.hosp.COVID2, data=full1_Q2)
+
+table1(~ fluyes | You.or.close.friend.fam.flu, data=full1_Q2)
+
+
+#########################################descriptive plots######################################################
+
+
+hist(full1_Q2$Age, main = "", xlab = "Age")
+mean(full1_Q2$Age)
+min(full1_Q2$Age)
+max(full1_Q2$Age)
+
+hist(full1_Q2$Weeks.pregnant, main = "", xlab = "Weeks Pregnant")
+
+summary(full1_Q2$Age)
+
+IQR(full1_Q2$Age)
+
+summary(full1_Q2$Weeks.pregnant)
+
+
+
+#############################stats and tables##################################################################
+
+
+require(tableone)
+
+
+#demographic table
+table1(~ Age + Weeks.pregnant + Occupation2 +Income+ Income2+Ethnicity+ Ethnicity2+No.of.children2+No.of.children+No.in.household+No.in.household2+OTC.meds.flu2+Alt.med.flu2+Antenatal.vitamins2+Folic.acid2+Pertussis+Education.Lvl+Education2 +fluyes +Have.you.had.COVID.vacc2 +monthresponse, data=full1_Q2)
+
+#demographic table in relation to flu vax status
+#omit NA's in fluyes
+#full1_Q2$fluyes2 <- NA
+#full1_Q2$fluyes2[!is.na(full1_Q2$fluyes)] <- full1_Q2$fluyes[!is.na(full1_Q2$fluyes)]
+
+table1(~ Age + Weeks.pregnant + Occupation2 +Income+ Income2+ Ethnicity2+No.of.children2+No.in.household2+OTC.meds.flu2+Alt.med.flu2+Antenatal.vitamins2+Folic.acid2+Pertussis+Education2+If.no.intend+Flu.vacc.this.preg +monthresponse| fluyes, data=full1_Q2)
+
+#demographic table in relation to COVID vax status
+table1(~ Age + Weeks.pregnant + Occupation2 +Income+ Income2+ Ethnicity2+No.of.children2+No.in.household2+OTC.meds.flu2+Alt.med.flu2+Antenatal.vitamins2+Folic.acid2+Pertussis+Education2+If.no.intend+Flu.vacc.this.preg +monthresponse| Have.you.had.COVID.vacc2, data=full1_Q2)
+
+#summary of demographics in relation to flu vax status
+summary(fluyes ~ Age + Weeks.pregnant + Occupation2 + Income2 + Education2 + Ethnicity2 + No.of.children2 + No.in.household2 + Pertussis + Antenatal.vitamins2 + High.risk2 + OTC.meds.flu2 + Alt.med.flu2 + monthresponse, data=full1_Q2, method="reverse", test=T)
+
+#summary of demographics in relation to COVID vax status
+summary(Have.you.had.COVID.vacc2 ~ Age + Weeks.pregnant + Occupation2 +Income+ Income2+ Ethnicity2+No.of.children2+No.in.household2+OTC.meds.flu+Alt.med.flu+Antenatal.vitamins+Folic.acid+Pertussis+Education2+If.no.intend+Flu.vacc.this.preg + monthresponse, data=full1_Q2, method="reverse", test=T)
+
+summary(Have.you.had.COVID.vacc2 ~ Age + Weeks.pregnant + Occupation2 + Income2+ Ethnicity2+No.of.children2+No.in.household2+OTC.meds.flu2+Alt.med.flu2+Antenatal.vitamins+Pertussis+Education2+If.no.intend+Flu.vacc.this.preg + High.risk2 + monthresponse, data=full1_Q2, method="reverse", test=T)
+
+
+
+#demographic table in relation to flu vax status
+table1(~ Age + Weeks.pregnant + Occupation2 + Income2 + Education2 + Ethnicity2 + Prev.pregnancy2 + No.of.children2 + No.in.household2 + Pertussis + OTC.meds.flu2 + Alt.med.flu2 + Antenatal.vitamins2 + Folic.acid2 + High.risk2 + Shield2 + Smartphone2 + Exercise.before2 + Exercise.currently2 + Smoker2 + Discuss.vacc.with.partner.fam2 + fluyes + Flu.vacc.prev.preg2 + You.or.close.friend.fam.flu2 + You.or.close.friend.fam.pos.COVID2 + You.or.close.friend.fam.hosp.COVID2 + monthresponse| fluyes, data=full1_Q2)
+
+summary(fluyes ~ Age + Weeks.pregnant + Occupation2 + Income2 + Education2 + Ethnicity2 + Prev.pregnancy2 + No.of.children2 + No.in.household2 + Pertussis + OTC.meds.flu2 + Alt.med.flu2 + Antenatal.vitamins2 + Folic.acid2 + High.risk2 + Shield2 + Smartphone2 + Exercise.before2 + Exercise.currently2 + Smoker2 + Discuss.vacc.with.partner.fam2 + fluyes + Flu.vacc.prev.preg2 + You.or.close.friend.fam.flu2 + You.or.close.friend.fam.pos.COVID2 + You.or.close.friend.fam.hosp.COVID2 + monthresponse, data=full1_Q2, method="reverse", test=T)
+
+#export results table 1
+install.packages("finalfit")
+library(finalfit)
+
+resultstab1_flu <- table1(~ Age + Weeks.pregnant + Occupation2 + Income2 + Education2 + Ethnicity2 + Prev.pregnancy2 + No.of.children2 + No.in.household2 + Pertussis + OTC.meds.flu2 + Alt.med.flu2 + Antenatal.vitamins2 + Folic.acid2 + High.risk2 + Shield2 + Smartphone2 + Exercise.before2 + Exercise.currently2 + Smoker2 + Discuss.vacc.with.partner.fam2 + fluyes + Flu.vacc.prev.preg2 + You.or.close.friend.fam.flu2 + You.or.close.friend.fam.pos.COVID2 + You.or.close.friend.fam.hosp.COVID2 + monthresponse| fluyes, data=full1_Q2)
+
+write.csv(resultstab1_flu, "M:/Documents/thesis/questionnaire 2 tables/resultstab1_flu.csv", row.names = FALSE)
+
+
+#demographic table in relation to COVID vax status
+table1(~ Age + Weeks.pregnant + Occupation2 + Income2 + Education2 + Ethnicity2 + Prev.pregnancy2 + No.of.children2 + No.in.household2 + Pertussis + OTC.meds.flu2 + Alt.med.flu2 + Antenatal.vitamins2 + Folic.acid2 + High.risk2 + Shield2 + Smartphone2 + Exercise.before2 + Exercise.currently2 + Smoker2 + Discuss.vacc.with.partner.fam2 + fluyes + Flu.vacc.prev.preg2 + You.or.close.friend.fam.flu2 + You.or.close.friend.fam.pos.COVID2 + You.or.close.friend.fam.hosp.COVID2 + monthresponse| Have.you.had.COVID.vacc2, data=full1_Q2)
+
+summary(Have.you.had.COVID.vacc2 ~ Age + Weeks.pregnant + Occupation2 + Income2 + Education2 + Ethnicity2 + Prev.pregnancy2 + No.of.children2 + No.in.household2 + Pertussis + OTC.meds.flu2 + Alt.med.flu2 + Antenatal.vitamins2 + Folic.acid2 + High.risk2 + Shield2 + Smartphone2 + Exercise.before2 + Exercise.currently2 + Smoker2 + Discuss.vacc.with.partner.fam2 + fluyes + Flu.vacc.prev.preg2 + You.or.close.friend.fam.flu2 + You.or.close.friend.fam.pos.COVID2 + You.or.close.friend.fam.hosp.COVID2 + monthresponse, data=full1_Q2, method="reverse", test=T)
+
+#export results table 1
+resultstab1_covid <- table1(~ Age + Weeks.pregnant + Occupation2 + Income2 + Education2 + Ethnicity2 + Prev.pregnancy2 + No.of.children2 + No.in.household2 + Pertussis + OTC.meds.flu2 + Alt.med.flu2 + Antenatal.vitamins2 + Folic.acid2 + High.risk2 + Shield2 + Smartphone2 + Exercise.before2 + Exercise.currently2 + Smoker2 + Discuss.vacc.with.partner.fam2 + fluyes + Flu.vacc.prev.preg2 + You.or.close.friend.fam.flu2 + You.or.close.friend.fam.pos.COVID2 + You.or.close.friend.fam.hosp.COVID2 + monthresponse| Have.you.had.COVID.vacc2, data=full1_Q2)
+
+write.csv(resultstab1_covid, "M:/Documents/thesis/questionnaire 2 tables/resultstab1_covid.csv", row.names = FALSE)
+
+
+#stats for create table one for demographics in relation to flu and COVID vax status
+myvarstable1_Q2 <- c("Age", "Weeks.pregnant", "Occupation2", "Income2", "Education2", "Ethnicity2", "Prev.pregnancy2", "No.of.children2", "No.in.household2", "Pertussis", "OTC.meds.flu2", "Alt.med.flu2", "Antenatal.vitamins2", "Folic.acid2", "High.risk2", "Shield2","Smartphone", "Exercise.before2", "Exercise.currently2", "Smoker2", "Discuss.vacc.with.partner.fam2", "fluyes", "Flu.vacc.prev.preg2", "You.or.close.friend.fam.flu2", "You.or.close.friend.fam.pos.COVID2", "You.or.close.friend.fam.hosp.COVID2", "monthresponse")
+catvarstable1_Q2 <- c("Occupation2", "Income2", "Education2","Ethnicity2","Prev.pregnancy2", "No.of.children2", "No.in.household2", "Pertussis", "OTC.meds.flu2", "Alt.med.flu2", "Antenatal.vitamins2", "Folic.acid2", "High.risk2", "Shield2","Smartphone", "Exercise.before2", "Exercise.currently2", "Smoker2", "Discuss.vacc.with.partner.fam2", "fluyes", "Flu.vacc.prev.preg2", "You.or.close.friend.fam.flu2", "You.or.close.friend.fam.pos.COVID2", "You.or.close.friend.fam.hosp.COVID2", "monthresponse", "monthresponse")
+exactvarstable1_Q2 <- c("Occupation2", "Ethnicity2", "No.of.children2", "No.in.household2", "Education2", "fluyes", "Have.you.had.COVID.vacc2", "monthresponse")
+
+table1man1_Q2 <- CreateTableOne(vars = myvarstable1_Q2, data = full1_Q2, strata = "fluyes")
+print(table1man1_Q2, exact = exactvarstable1_Q2, quote = TRUE)
+
+table1man2_Q2 <- CreateTableOne(vars = myvarstable1_Q2, data = full1_Q2, strata = "Have.you.had.COVID.vacc2")
+print(table1man2_Q2, exact = exactvarstable1_Q2, quote = TRUE)
+
+
+
+#table and stats for table 2 attitudes and beliefs about flu perception and risks in relation to flu vax status
+
+#table for attitudes and beliefs about flu perception and risks in relation to flu vax status
+table1(~ Flu.ill + Flu.stay.home.work.school + Flu.baby.ill + Flu.hurt.baby + Flu.fam.friends.ill + Flu.coworkers.colleagues.ill + Flu.die + Knowledgeable.flu.general + Knowledgeable.flu.risk + I.am.risk.getting.flu + Fam.friends.risk.getting.flu + You.or.close.friend.fam.flu2 +OTC.meds.flu2 + Alt.med.flu2| fluyes, data=full1_Q2)
+
+#summary for attitudes and beliefs about flu perception and risks in relation to flu vax status
+summary(fluyes ~ Flu.ill + Flu.stay.home.work.school + Flu.baby.ill + Flu.hurt.baby + Flu.fam.friends.ill + Flu.coworkers.colleagues.ill + Flu.die + Knowledgeable.flu.general + Knowledgeable.flu.risk + I.am.risk.getting.flu + Fam.friends.risk.getting.flu +  You.or.close.friend.fam.flu2 + OTC.meds.flu2 + Alt.med.flu2, data=full1, method="reverse", test=T)
+
+#export results table 2
+resultstab2 <- table1(~ Flu.ill + Flu.stay.home.work.school + Flu.baby.ill + Flu.hurt.baby + Flu.fam.friends.ill + Flu.coworkers.colleagues.ill + Flu.die + Knowledgeable.flu.general + Knowledgeable.flu.risk + I.am.risk.getting.flu + Fam.friends.risk.getting.flu + You.or.close.friend.fam.flu2 +OTC.meds.flu2 + Alt.med.flu2| fluyes, data=full1_Q2)
+
+write.csv(resultstab2, "M:/Documents/thesis/questionnaire 2 tables/resultstab2.csv", row.names = FALSE)
+
+
+#stats for create table one for attitudes and beliefs about flu perception and risks in relation to flu vax status (checking fisher exact)
+myvarstable2_Q2<-c("Flu.ill", "Flu.stay.home.work.school", "Flu.baby.ill", "Flu.hurt.baby", "Flu.fam.friends.ill", "Flu.coworkers.colleagues.ill", "Flu.die", "Knowledgeable.flu.general", "Knowledgeable.flu.risk", "I.am.risk.getting.flu", "Fam.friends.risk.getting.flu", "You.or.close.friend.fam.flu2", "OTC.meds.flu2", "Alt.med.flu2")
+catvarstable2_Q2<-c("Flu.ill", "Flu.stay.home.work.school", "Flu.baby.ill", "Flu.hurt.baby", "Flu.fam.friends.ill", "Flu.coworkers.colleagues.ill", "Flu.die", "Knowledgeable.flu.general", "Knowledgeable.flu.risk", "I.am.risk.getting.flu", "Fam.friends.risk.getting.flu", "You.or.close.friend.fam.flu2", "OTC.meds.flu2", "Alt.med.flu2")
+exactvarstable2_Q2<-c("Flu.stay.home.work.school", "Flu.family.friends.ill", "Flu.coworkers.colleagues.ill", "Flu.die", "Knowledgeable.flu.general", "Knowledgeable.flu.risk", "OTC.meds.flu2", "Alt.med.flu2")
+
+
+table2man_Q2<-CreateTableOne(vars=myvarstable2_Q2, data=full1_Q2, strata="fluyes")
+print(table2man_Q2,exact = exactvarstable2_Q2, quote = TRUE)
+
+
+
+#table and stats for table 3 attitudes and beliefs about flu vaccine in relation to flu vax status
+
+#table for attitudes and beliefs about flu vaccine in relation to flu vax status
+table1(~Flu.vacc.side.effects + Flu.vacc.painful + Flu.vacc.not.protect.me + Flu.vacc.not.protect.baby + Inconvenient.flu.vacc + Shortage.flu.vacc + Flu.vacc.recommended + Flu.vacc.not.get.ill + Flu.vacc.prevent.baby.ill + Flu.vacc.prevent.fam.friends.ill + Flu.vacc.prev.preg2 + If.yes.side.effects2 | fluyes, data = full1_Q2)
+
+#export results table 3
+resultstab3 <- table1(~Flu.vacc.side.effects + Flu.vacc.painful + Flu.vacc.not.protect.me + Flu.vacc.not.protect.baby + Inconvenient.flu.vacc + Shortage.flu.vacc + Flu.vacc.recommended + Flu.vacc.not.get.ill + Flu.vacc.prevent.baby.ill + Flu.vacc.prevent.fam.friends.ill + Flu.vacc.prev.preg2 + If.yes.side.effects2 | fluyes, data = full1_Q2)
+
+write.csv(resultstab3, "M:/Documents/thesis/questionnaire 2 tables/resultstab3.csv", row.names = FALSE)
+
+#summary for attitudes and beliefs about flu vaccine in relation to flu vax status
+summary(fluyes ~ Flu.vacc.side.effects + Flu.vacc.painful + Flu.vacc.not.protect.me + Flu.vacc.not.protect.baby + Inconvenient.flu.vacc + Shortage.flu.vacc + Flu.vacc.recommended + Flu.vacc.not.get.ill + Flu.vacc.prevent.baby.ill + Flu.vacc.prevent.fam.friends.ill + Flu.vacc.prev.preg2 + If.yes.side.effects2, data=full1_Q2, method="reverse", test=T)
+
+#stats for create table one for attitudes and beliefs about flu vaccine in relation to flu vax status (checking fisher exact)
+myvarstable3_Q2 <- c("Flu.vacc.side.effects", "Flu.vacc.painful", "Flu.vacc.not.protect.me", "Flu.vacc.not.protect.baby", "Inconvenient.flu.vacc", "Shortage.flu.vacc", "Flu.vacc.recommended", "Flu.vacc.not.get.ill", "Flu.vacc.prevent.baby.ill", "Flu.vacc.prevent.fam.friends.ill", "Flu.vacc.prev.preg2", "If.yes.side.effects2")
+catvarstable3_Q2 <- c("Flu.vacc.side.effects", "Flu.vacc.painful", "Flu.vacc.not.protect.me", "Flu.vacc.not.protect.baby", "Inconvenient.flu.vacc", "Shortage.flu.vacc", "Flu.vacc.recommended", "Flu.vacc.not.get.ill", "Flu.vacc.prevent.baby.ill", "Flu.vacc.prevent.fam.friends.ill", "Flu.vacc.prev.preg2", "If.yes.side.effects2")
+exactvarstable3_Q2 <- c("Inconvenient.flu.vacc", "Shortage.flu.vacc", "If.yes.side.effects")
+
+table3man_Q2 <- CreateTableOne(vars = myvarstable3_Q2, data = full1_Q2, strata = "fluyes")
+print(table3man_Q2, exact = exactvarstable3_Q2, quote = TRUE)
+
+
+
+#table and stats for table 4 attitudes and beliefs about covid and risks in relation to willingness to receive covid vax
+
+#table for attitudes and beliefs about covid and risks in relation to covid vax status
+table1(~ COVID.ill + COVID.isolate + COVID.quarantine + COVID.baby.ill + COVID.fam.friends.ill + Knowledgeable.COVID.general +Knowledgeable.COVID.risk + I.am.risk.getting.COVID + Fam.friends.risk.getting.COVID + You.or.close.friend.fam.pos.COVID2 + You.or.close.friend.fam.hosp.COVID2 | Have.you.had.COVID.vacc2, data = full1_Q2)
+
+#export results table 4
+resultstab4 <- table1(~ COVID.ill + COVID.isolate + COVID.quarantine + COVID.baby.ill + COVID.fam.friends.ill + Knowledgeable.COVID.general +Knowledgeable.COVID.risk + I.am.risk.getting.COVID + Fam.friends.risk.getting.COVID + You.or.close.friend.fam.pos.COVID2 + You.or.close.friend.fam.hosp.COVID2 | Have.you.had.COVID.vacc2, data = full1_Q2)
+
+write.csv(resultstab4, "M:/Documents/thesis/questionnaire 2 tables/resultstab4.csv", row.names = FALSE)
+
+#summary for attitudes and beliefs about covid and risks in relation to covid vax status
+summary(Have.you.had.COVID.vacc2 ~ COVID.ill + COVID.isolate + COVID.quarantine + COVID.baby.ill + COVID.fam.friends.ill + Knowledgeable.COVID.general +Knowledgeable.COVID.risk + I.am.risk.getting.COVID + Fam.friends.risk.getting.COVID | Have.you.had.COVID.vacc2 + You.or.close.friend.fam.pos.COVID2 + You.or.close.friend.fam.hosp.COVID2, data=full1_Q2, method="reverse", test=T)
+
+#stats for create table one for attitudes and beliefs about covid and risks in relation to covid vax status (checking fisher exact)
+myvarstable4_Q2 <- c("COVID.ill", "COVID.isolate", "COVID.quarantine", "COVID.baby.ill", "COVID.fam.friends.ill", "Knowledgeable.COVID.general", "Knowledgeable.COVID.risk", "I.am.risk.getting.COVID", "Fam.friends.risk.getting.COVID", "You.or.close.friend.fam.pos.COVID2", "You.or.close.friend.fam.hosp.COVID2")
+catvarstable4_Q2 <- c("COVID.ill", "COVID.isolate", "COVID.quarantine", "COVID.baby.ill", "COVID.fam.friends.ill", "Knowledgeable.COVID.general", "Knowledgeable.COVID.risk", "I.am.risk.getting.COVID", "Fam.friends.risk.getting.COVID", "You.or.close.friend.fam.pos.COVID2", "You.or.close.friend.fam.hosp.COVID2")
+exactvarstable4_Q2 <- c("COVID.ill", "COVID.isolate", "COVID.quaratine", "COVID.baby.ill", "COVID.fam.friends.ill", "Knowledgeable.COVID.general", "Knowledgeable.COVID.risk", "I.am.risk.getting.COVID", "Fam.friends.risk.getting.COVID")
+
+table4man_Q2 <- CreateTableOne(vars = myvarstable4_Q2, data = full1_Q2, strata = "Have.you.had.COVID.vacc2")
+print(table4man_Q2, exact = exactvarstable4_Q2, quote = TRUE)
+
+
+
+#table and stats for table 5 attitudes and beleiefs towards covid vax
+
+#table for attitudes and beliefs towards covid vax in relation to covid vax status
+table1(~ COVID.vacc.protect.me + COVID.vacc.protect.baby.fam.friends + Would.vacc.baby.COVID + If.COVID.vacc.seasonal.would.have + Would.have.COVID.vacc.if.not.preg + If.1.dose.did.receive.prior.to.preg2 + If.2.doses.when.receive2 | Have.you.had.COVID.vacc2, data=full1_Q2)
+
+#export results table 5
+resultstab5 <- table1(~ COVID.vacc.protect.me + COVID.vacc.protect.baby.fam.friends + Would.vacc.baby.COVID + If.COVID.vacc.seasonal.would.have + Would.have.COVID.vacc.if.not.preg | Have.you.had.COVID.vacc2, data=full1_Q2)
+
+write.csv(resultstab5, "M:/Documents/thesis/questionnaire 2 tables/resultstab5.csv", row.names = FALSE)
+
+#summary for attitudes and beliefs towards covid vax in relation to covid vax status
+summary(Have.you.had.COVID.vacc2 ~ COVID.vacc.protect.me + COVID.vacc.protect.baby.fam.friends + Would.vacc.baby.COVID+ If.COVID.vacc.seasonal.would.have + Would.have.COVID.vacc.if.not.preg, data = full1_Q2, method="reverse", test=T)
+
+#stats for attitudes and beliefs towards covid vax in relation to covid vax status
+myvarstable5_Q2 <- c("COVID.vacc.protect.me", "COVID.vacc.protect.baby.fam.friends", "Would.vacc.baby.COVID", "If.COVID.vacc.seasonal.would.have", "Would.have.COVID.vacc.if.not.preg", "If.1.dose.did.receive.prior.to.preg2", "If.2.doses.when.receive2")
+catvarstable5_Q2 <- c("COVID.vacc.protect.me", "COVID.vacc.protect.baby.fam.friends", "Would.vacc.baby.COVID", "If.COVID.vacc.seasonal.would.have", "Would.have.COVID.vacc.if.not.preg", "If.1.dose.did.receive.prior.to.preg2", "If.2.doses.when.receive2")
+exactvarstable5_Q2 <- c("COVID.vacc.protect.me", "COVID.vacc.protect.baby.fam.friends", "Would.vacc.baby.COVID", "If.COVID.vacc.seasonal.would.have", "Would.have.COVID.vacc.if.not.preg", "If.1.dose.did.receive.prior.to.preg2", "If.2.doses.when.receive2")
+
+table5man_Q2 <- CreateTableOne(vars = myvarstable5_Q2, data = full1_Q2, strata = "Have.you.had.COVID.vacc2")
+print(table5man_Q2, exact = exactvarstable5_Q2, quote = TRUE)
+
+
+
+#table and stats for supplementary table 1 health behaviours in relation to flu vax status and covid vax status
+
+#table for supplementary table 1 health behaviours in relation to flu vax status and covid vax status
+table1(~Pertussis + Antenatal.vitamins2 + Folic.acid2 + High.risk2 + Shield2 + Exercise.before2 + Exercise.currently2 + Smoker2 + Discuss.vacc.with.partner.fam2 | fluyes, data = full1_Q2)
+
+table1(~Pertussis + Antenatal.vitamins2 + Folic.acid2 + High.risk2 + Shield2 + Exercise.before2 + Exercise.currently2 + Smoker2 + Discuss.vacc.with.partner.fam2 | Have.you.had.COVID.vacc2, data = full1_Q2)
+
+#export tables
+supptab1_flu <- table1(~Pertussis + Antenatal.vitamins2 + Folic.acid2 + High.risk2 + Shield2 + Exercise.before2 + Exercise.currently2 + Smoker2 + Discuss.vacc.with.partner.fam2 | fluyes, data = full1_Q2)
+
+write.csv(supptab1_flu, "M:/Documents/thesis/questionnaire 2 tables/supptabl1_flu.csv", row.names = FALSE)
+
+supptab1_covid <- table1(~Pertussis + Antenatal.vitamins2 + Folic.acid2 + High.risk2 + Shield2 + Exercise.before2 + Exercise.currently2 + Smoker2 + Discuss.vacc.with.partner.fam2 | Have.you.had.COVID.vacc2, data = full1_Q2)
+
+write.csv(supptab1_covid, "M:/Documents/thesis/questionnaire 2 tables/supptabl1_covid.csv", row.names = FALSE)
+
+#stats for create table one  for health behaviours in relation to flu vax status and covid vax status (checking fisher exact); this is where pertussis info is
+myvarstableS1_Q2 <- c("Pertussis", "Antenatal.vitamins2", "Folic.acid2", "High.risk2", "Shield2", "Exercise.before2", "Exercise.currently2", "Smoker2", "Discuss.vacc.with.partner.fam2")
+catvarstableS1_Q2 <- c("Pertussis", "Antenatal.vitamins2", "Folic.acid2", "High.risk2", "Shield2", "Exercise.before", "Exercise.currently", "Smoker2", "Discuss.vacc.with.partner.fam2")
+exactvarstableS1_Q2 <- c("Antenatal.vitamins2", "High.risk2", "Exercise.before", "Exercise.currently", "Smoker2")
+
+tableS1man1_Q2 <- CreateTableOne(vars = myvarstableS1_Q2, data = full1_Q2, strata = "fluyes")
+print(tableS1man1_Q2, exact = exactvarstableS1_Q2, quote = TRUE)
+
+tableS1man2_Q2 <- CreateTableOne(vars = myvarstableS1_Q2, data = full1_Q2, strata = "Have.you.had.COVID.vacc2")
+print(tableS1man2_Q2, exact = exactvarstableS1_Q2, quote = TRUE)
+
+
+
+#table and stats for supplementary table 2 means by which flu vax was offered
+
+table1(~ Offered.flu.vacc + If.yes.offered.GP + If.yes.offered.wo.hosp + If.yes.offered.comm.ser.midwife + If.yes.offered.health.vis + If.yes.offered.pharm + If.yes.offered.other + Who.other.offered.specify + How.offered.letter + How.offered.text + How.offered.face.to.face + How.offered.other + How.other.offered.specify, data=full1_Q2)
+
+#export table
+supptab2 <- table1(~ Offered.flu.vacc + If.yes.offered.GP + If.yes.offered.wo.hosp + If.yes.offered.comm.ser.midwife + If.yes.offered.health.vis + If.yes.offered.pharm + If.yes.offered.other + Who.other.offered.specify + How.offered.letter + How.offered.text + How.offered.face.to.face + How.offered.other + How.other.offered.specify, data=full1_Q2)
+
+write.csv(supptab2, "M:/Documents/thesis/questionnaire 2 tables/supptab2.csv", row.names = FALSE)
+
+#table and stats for supplementary table 3 attitudes and beliefs towards vaccination in general in relation to flu vax status and willingness to accept covid vax
+
+#table for attitudes and beliefs towards vaccination in general in relation to flu vax status and willingness to receive covid vax
+table1(~ Vacc.prevent.disease + Vacc.safe + Intend.vacc.child.flu + Intend.vacc.baby + More.likely.vacc.if.fam.friends.have | fluyes, data=full1_Q2)
+
+table1(~ Vacc.prevent.disease + Vacc.safe + Intend.vacc.child.flu + Intend.vacc.baby + More.likely.vacc.if.fam.friends.have | Have.you.had.COVID.vacc2, data=full1_Q2)
+
+#export tables
+supptab3_flu <- table1(~ Vacc.prevent.disease + Vacc.safe + Intend.vacc.child.flu + Intend.vacc.baby + More.likely.vacc.if.fam.friends.have | fluyes, data=full1_Q2)
+
+write.csv(supptab3_flu, "M:/Documents/thesis/questionnaire 2 tables/supptab3_flu.csv", row.names = FALSE)
+
+supptab3_covid <- table1(~ Vacc.prevent.disease + Vacc.safe + Intend.vacc.child.flu + Intend.vacc.baby + More.likely.vacc.if.fam.friends.have | Have.you.had.COVID.vacc2, data=full1_Q2)
+
+write.csv(supptab3_covid, "M:/Documents/thesis/questionnaire 2 tables/supptab3_covid.csv", row.names = FALSE)
+
+#summary for attitudes and beliefs towards vaccination in general in relation to flu vax status and willingness to receive covid vax
+summary(fluyes ~ Vacc.prevent.disease + Vacc.safe + Intend.vacc.child.flu + Intend.vacc.baby + More.likely.vacc.if.fam.friends.have)
+
+summary(Have.you.had.COVID.vacc2 ~ Vacc.prevent.disease + Vacc.safe + Intend.vacc.child.flu + Intend.vacc.baby + More.likely.vacc.if.fam.friends.have)
+
+#stats for create table one for attitudes and beliefs towards vaccination in general in relation to flu vax status and willingness to receive covid vax (Checking fisher exact)
+myvarstableS3_Q2 <- c("Vacc.prevent.disease", "Vacc.safe", "Intend.vacc.child.flu", "Intend.vacc.baby", "More.likely.vacc.if.fam.friends.have")
+catvarstableS3_Q2 <- c("Vacc.prevent.disease", "Vacc.safe", "Intend.vacc.child.flu", "Intend.vacc.baby", "More.likely.vacc.if.fam.friends.have")
+exactvarstableS3_Q2 <- c("Vacc.prevent.disease", "Vacc.safe", "Intend.vacc.child.flu", "Intend.vacc.baby")
+
+tableS3man1_Q2 <- CreateTableOne(vars = myvarstableS3_Q2, data = full1_Q2, strata = "fluyes")
+print(tableS3man1_Q2, exact = exactvarstableS3_Q2, quote = TRUE)
+
+tableS3man2_Q2 <- CreateTableOne(vars = myvarstableS3_Q2, data = full1_Q2, strata = "Have.you.had.COVID.vacc2")
+print(tableS3man2_Q2, exact = exactvarstableS3_Q2, quote = TRUE)
+
+.
+
+#table and stats for supplementary table 4 likelihood to accept a vax from different healthcare professionals in relation to flu vax status
+
+#table for supplementary table 4 likelihood to accept a vax from different healthcare professionals in relation to flu vax status and covid vax status
+table1(~ Doc.vacc + Pharm.vacc + Nurse.vacc + Midwife.vacc + Health.visitor.vacc + Fam.friend.vacc | fluyes, data = full1_Q2)
+
+table1(~ Doc.vacc + Pharm.vacc + Nurse.vacc + Midwife.vacc + Health.visitor.vacc + Fam.friend.vacc | Have.you.had.COVID.vacc2, data = full1_Q2)
+
+#export tables
+supptab4_flu <- table1(~ Doc.vacc + Pharm.vacc + Nurse.vacc + Midwife.vacc + Health.visitor.vacc + Fam.friend.vacc | fluyes, data = full1_Q2)
+
+write.csv(supptab4_flu, "M:/Documents/thesis/questionnaire 2 tables/supptab4_flu.csv", row.names = FALSE)
+
+supptab4_covid <- table1(~ Doc.vacc + Pharm.vacc + Nurse.vacc + Midwife.vacc + Health.visitor.vacc + Fam.friend.vacc | Have.you.had.COVID.vacc2, data = full1_Q2)
+
+write.csv(supptab4_covid, "M:/Documents/thesis/questionnaire 2 tables/supptab4_covid.csv", row.names = FALSE)
+
+#summary for supplementary table 4 likelihood to accept a vax from different healthcare professionals in relation to flu vax status and covid vax status
+summary(fluyes ~ Doc.vacc + Pharm.vacc + Nurse.vacc + Midwife.vacc + Health.visitor.vacc + Fam.friend.vacc, data = full1_Q2, method="reverse", test=T)
+
+summary(fluyes ~ Doc.vacc + Pharm.vacc + Nurse.vacc + Midwife.vacc + Health.visitor.vacc + Fam.friend.vacc, data = full1_Q2, method="reverse", test=T)
+
+#stats for supplementary table 4 likelihood to accept a vax from different healthcare professionals in relation to flu vax status and covid vax status
+myvarstableS4_Q2 <- c("Doc.vacc", "Pharm.vacc", "Nurse.vacc", "Midwife.vacc", "Health.visitor.vacc", "Fam.friend.vacc")
+catvarstableS4_Q2 <- c("Doc.vacc", "Pharm.vacc", "Nurse.vacc", "Midwife.vacc", "Health.visitor.vacc", "Fam.friend.vacc")
+exactvarstableS4_Q2 <- c("Doc.vacc", "Nurse.vacc", "Midwife.vacc")
+
+tableS4man1_Q2 <- CreateTableOne(vars = myvarstableS4_Q2, data = full1_Q2, strata = "fluyes")
+print(tableS4man1_Q2, exact = exactvarstableS4_Q2, quote = TRUE)
+
+tableS4man2_Q2 <- CreateTableOne(vars = myvarstableS3_Q2, data = full1_Q2, strata = "Have.you.had.COVID.vacc2")
+print(tableS3man2_Q2, exact = exactvarstableS3_Q2, quote = TRUE)
+
+
+
+
+##################################compare to questionnaire 1#################################################
+
+coded <- read_excel("M:/Questionnaire data/questionnaire 1 coded responses.xlsx", sheet = 1, trim_ws = T, col_types = NULL)
+
+noncoded <- read.csv("M:/Questionnaire data/questionnaire 2 non-coded responses.xlsx", fileEncoding = "latin1")
+
+noncoded2 <- noncoded[c("Unique Response Number", "21.1. If I get the flu, I will get very ill.", "21.2. If I get the flu, I will have to stay home from work/school.", "21.3. If I get the flu, my baby could get ill.", "21.4. If I get the flu, it could hurt my baby.", "21.5. If I get the flu, my other family members or friends could get ill.", "21.6. If I get the flu, my co-workers/colleagues could get ill.", "21.7. If I get the flu, I will die.", "22.1. I feel knowledgeable about the flu in general.", "22.2. I feel knowledgeable about my risk of getting the flu.", "22.3. I am at risk of getting the flu.", "22.4. My family and friends are at risk of getting the flu.", "31.1. If I have the flu vaccine, I will have side effects from it.", "31.2. If I have the flu vaccine, it will be painful.", "31.3. If I have the flu vaccine, it will not protect me from getting the flu.", "31.4. If I have the flu vaccine, it will not protect my baby.", "31.a.1. It is inconvenient for me to get the flu vaccine.", "31.a.2. There is a shortage of the flu vaccine.", "31.a.3. The flu vaccine was recommended to me by my healthcare provider (e.g. doctor, nurse, midwife).", "32.1. If I have the flu vaccine, I will not get ill with the flu.", "32.2. If I have the flu vaccine, I will help prevent my baby from getting the flu.", "32.3. If I have the flu vaccine, I will help prevent my family/friends from getting ill with the flu.", "33.1. Vaccines prevent disease.", "33.2. Vaccines are safe.", "33.3. I intend to vaccinate my child with the flu vaccine when they are old enough.", "33.4. I intend to vaccinate my baby when they are born with all vaccines offered.", "33.5. I am more likely to have a vaccine if my family members or friends have had it.", "34.1. - doctor", "34.2. - pharmacist", "34.3. - nurse", "34.4. - midwife", "34.5. - health visitor", "34.6. - family member or friend", "40.1. If I get COVID-19, I will get very ill.", "40.2. If I get COVID-19, I will have to isolate myself.", "40.3. If I get COVID-19, my family members and friends who came in contact with me will have to quarantine themselves.", "40.4. If I get COVID-19, my baby could get ill.", "40.5. If I get COVID-19, my other family members or friends could get ill.", "41.1. I feel knowledgeable about COVID-19 in general.", "41.2. I feel knowledgeable about my risk of getting COVID-19.", "41.3. I am at risk of getting COVID-19.", "41.4. My family and friends are at risk of getting COVID-19.", "43.1. A COVID-19 vaccine would protect me.", "43.2. A COVID-19 vaccine would protect my baby, other family members, or friends from getting ill with COVID-19.", "43.3. I would vaccinate my baby against COVID-19 as soon as possible after they are born.", "43.4. If a COVID-19 vaccine was seasonal, I would get it every year.", "43.5. I would get a COVID-19 vaccine if I wasn't pregnant.")]
+
+
+
+
+
+
+
+noncoded2 <- noncoded[c("Unique Response Number",	"20.1. If I get the flu, I will get very ill.", "20.2. If I get the flu, I will have to stay home from work/school.", "20.3. If I get the flu, my baby could get ill.",	"20.4. If I get the flu, it could hurt my baby.", "20.5. If I get the flu, my other family members or friends could get ill.", "20.6. If I get the flu, my co-workers/colleagues could get ill.",	"20.7. If I get the flu, I will die.",	"21.1. I feel knowledgeable about the flu in general.",	"21.2. I feel knowledgeable about my risk of getting the flu.", "21.3. I am at risk of getting the flu.", "21.4. My family and friends are at risk of getting the flu.", "30.1. If I have the flu vaccine, I will have side effects from it.", 	"30.2. If I have the flu vaccine, I will get ill from it.", 	"30.3. If I have the flu vaccine, it could hurt my baby.", "30.4. If I have the flu vaccine, it will be painful.",	"30.5. If I have the flu vaccine, it will not protect me from getting the flu.", "30.6. If I have the flu vaccine, it will not protect my baby.", "30.a.1. It is inconvenient for me to get the flu vaccine.", "30.a.2. There is a shortage of the flu vaccine.",	"30.a.3. The flu vaccine was recommended to me by my healthcare provider (e.g. doctor, nurse, midwife).",	"31.1. If I have the flu vaccine, I will not get ill with the flu.",	"31.2. If I have the flu vaccine, I will help prevent my baby from getting the flu.",	"31.3. If I have the flu vaccine, I will help prevent my family/friends from getting ill with the flu.",	"32.1. Vaccines prevent disease.",	"32.2. Vaccines are safe.", 	"32.3. I intend to vaccinate my child with the flu vaccine when they are old enough.",	"32.4. I intend to vaccinate my baby when they are born with all vaccines offered.",	"32.5. I am more likely to have a vaccine if my family members or friends have had it.",	"33.1. - doctor",	"33.2. - pharmacist",	"33.3. - nurse", "33.4. - midwife",	"33.5. - health visitor", "33.6. - family member or friend",	"37.1. If I get COVID-19, I will get very ill.", "37.2. If I get COVID-19, I will have to isolate myself.",	"37.3. If I get COVID-19, my family members and friends who came in contact with me will have to quarantine themselves.",	"37.4. If I get COVID-19, my baby could get ill.",	"37.5. If I get COVID-19, my other family members or friends could get ill.",	"38.1. I feel knowledgeable about COVID-19 in general.", "38.2. I feel knowledgeable about my risk of getting COVID-19.",	"38.3. I am at risk of getting COVID-19.", "38.4. My family and friends are at risk of getting COVID-19.", "39.1. If a COVID-19 vaccine was available to me now, I would get it.",	"39.2. A COVID-19 vaccine would protect me.",	"39.3. A COVID-19 vaccine would protect my baby, other family members, or friends from getting ill with COVID-19.",	"39.4. I would vaccinate my baby against COVID-19 as soon as possible after they are born.",	"39.5. If a COVID-19 vaccine was seasonal, I would get it every year.",	"39.6. I would get a COVID-19 vaccine if I wasn't pregnant.",	"40.1. - doctor.",	"40.2. - pharmacist.",	"40.3. - nurse.",	"40.4. - midwife.",	"40.5. - health visitor.",	"40.6. - family member or friend")]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
