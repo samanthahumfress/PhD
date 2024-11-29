@@ -15,7 +15,7 @@ require(dplyr)
 require(readxl)
 require(stringr)
 library(ggpubr)
-require(xlsx)
+require(readxl)
 require(finalfit)
 require(table1)
 require(arsenal)
@@ -35,8 +35,7 @@ coded2<-coded[c("URN","Q1",	"Q2",	"Q3",	"Q4",	"Q5",	"Q6",	"Q6_a",	"Q7",	"Q8",	"Q
 
 
 
-
-noncoded <- read.xlsx("questionnaire 1 non-coded responses.xlsx", sheetName = 1, trim_ws = T)
+noncoded <- read.csv("questionnaire 1 non-coded responses.csv", fileEncoding = "latin1")
 
 
 
@@ -88,12 +87,12 @@ full1 <- subset(full1, subset=(Postcode!="CH7" & Postcode!="WN6" & Postcode!="CH
 
 #relabel income
 full1$Income<-as.factor(full1$Income)
-levels(full1$Income)<-c("<?10,000", "?10,001-20,000", "?20,001-30,000","?30,001-45,000","?45,001-60,000",">?60,000")
+levels(full1$Income)<-c("<£10,000", "£10,001-20,000", "£20,001-30,000","£30,001-45,000","£45,001-60,000",">£60,000")
 
 ##create a new field for income and recode
 full1$Income2<-as.character(full1$Income)
-full1$Income2[full1$Income2 =="<?10,000" | full1$Income2 =="?10,001-20,000" | full1$Income2 =="?20,001-30,000"]<-"<=?30,000"
-full1$Income2[full1$Income =="?30,001-45,000" |full1$Income =="?45,001-60,000"]<-"?30,001-60,000"
+full1$Income2[full1$Income2 =="<£10,000" | full1$Income2 =="£10,001-20,000" | full1$Income2 =="£20,001-30,000"]<-"<=£30,000"
+full1$Income2[full1$Income =="£30,001-45,000" |full1$Income =="£45,001-60,000"]<-"£30,001-60,000"
 
 full1$Income2<-as.factor(full1$Income2)
 levels(full1$Income2)
@@ -198,9 +197,10 @@ levels(full1$Education2)
 
 
 #new flu vaccine field
+full1$final.flu.vacc.this.Preg<-NA
 full1$final.flu.vacc.this.Preg <- full1$Flu.vacc.this.preg
 full1$final.flu.vacc.this.Preg[full1$Flu.vacc.this.preg=="2" & full1$If.no.intend=="1"] <- "1"
-table(full1$flu.vacc.this.preg,full1$If.no.intend)
+table(full1$Flu.vacc.this.preg,full1$If.no.intend)
 
 #recode OTC medicine
 full1$OTC.meds.flu2<-NA
@@ -551,56 +551,27 @@ full1$fluyes[full1$If.no.intend==1]<-"1"
 full1$fluyes[full1$If.no.intend==2]<-"2"
 full1$fluyes[full1$Flu.vacc.this.preg==2 & is.na(full1$If.no.intend)]<-NA
 
-#reorder month respons
+#reorder month response
 levels(full1$monthresponse)
 full1$monthresponse<-factor(full1$monthresponse,levels(full1$monthresponse)[c(6,2,4,3,5,1)])
 levels(full1$monthresponse)
 
-
+#post April 16 as factor
+full1$PostApril16 <- as.factor(full1$PostApril16)
 
 
 #######################################descriptive tables##############################################
 
-table1(~ Age + Occupation2 +Income+ Income2+Ethnicity+ Ethnicity2+No.of.children2+No.of.children+No.in.household+No.in.household2+OTC.meds.flu2+Alt.med.flu2+Antenatal.vitamins2+Folic.acid2+Pertussis+Education.Lvl+Education2 +If.COVID.vacc.available.would.have, data=full1)
 
-table1(~ Age + Occupation2 +Income+ Income2+Ethnicity+ Ethnicity2+No.of.children2+No.of.children+No.in.household+No.in.household2+OTC.meds.flu2+Alt.med.flu2+Antenatal.vitamins2+Folic.acid2+Pertussis+Education.Lvl+Education2+If.no.intend| Flu.vacc.this.preg, data=full1)
-
-table1(~ Age + Occupation2 +Income+ Income2+ Ethnicity2+No.of.children2+No.in.household2+OTC.meds.flu2+Alt.med.flu2+Antenatal.vitamins2+Folic.acid2+Pertussis+Education2+If.no.intend+Flu.vacc.this.preg| If.COVID.vacc.available.would.have, data=full1)
-
-summary(Flu.vacc.this.preg ~ Age + Occupation2 + Income2 + Education2 + Ethnicity2 + No.of.children2 + No.in.household2 + Pertussis + Antenatal.vitamins2 + High.risk2 + OTC.meds.flu2 + Alt.med.flu2, data=full1, method="reverse", test=T)
-
-
-summary( If.COVID.vacc.available.would.have ~ Age + Occupation2 +Income+ Income2+ Ethnicity2+No.of.children2+No.in.household2+OTC.meds.flu+Alt.med.flu+Antenatal.vitamins+Folic.acid+Pertussis+Education2+If.no.intend+Flu.vacc.this.preg, data=full1, method="reverse", test=T)
-
-summary(If.COVID.vacc.available.would.have ~ Age + Occupation2 + Income2+ Ethnicity2+No.of.children2+No.in.household2+OTC.meds.flu2+Alt.med.flu2+Antenatal.vitamins+Pertussis+Education2+If.no.intend+Flu.vacc.this.preg + High.risk2, data=full1, method="reverse", test=T)
-
-table1(~ Age + Occupation2 + Income2 + Ethnicity2 + No.of.children2 + No.in.household2 | Flu.vacc.prev.preg, data=full1)
 
 
 #_______
 
-table1(~ Age + Weeks.pregnant + Occupation2 + Income2 + Education2 + Ethnicity2 + No.of.children2 + No.in.household2 + Pertussis + Antenatal.vitamins2 + Folic.acid2 + High.risk2 + Shield + Smartphone + Exercise.before + Exercise.currently + Smoker + Discuss.vacc.with.partner.fam + monthresponse + as.factor(PostApril16)| fluyes, data=full1)
 
 
-table1(~ Age + Weeks.pregnant + Occupation2 + Income2 + Education2 + Ethnicity2 + No.of.children2 + No.in.household2 + Pertussis + Antenatal.vitamins2 + Folic.acid2 + High.risk2 + Shield + Smartphone + Exercise.before + Exercise.currently + Smoker + Discuss.vacc.with.partner.fam + monthresponse + as.factor(PostApril16)| If.COVID.vacc.available.would.have, data=full1)
 
-table1(~ Flu.ill + Flu.stay.home.work.school + Flu.baby.ill + Flu.hurt.baby+ Flu.family.friends.ill + Flu.coworkers.colleages.ill + Flu.die + Knowledgeable.flu.general + Knowledgeable.flu.risk + I.am.risk.getting.flu + Family.friends.risk.getting.flu + You.or.close.friend.fam.flu + OTC.meds.flu2 + Alt.med.flu2| fluyes, data=full1)
 
-table1(~ Flu.vacc.side.effects + Flu.vacc.ill + Flu.vacc.hurt.baby + Flu.vacc.painful + Flu.vacc.not.protect.me + Flu.vacc.not.protect.baby + Inconvenient.flu.vacc + Shortage.flu.vacc + Flu.vacc.recommended + Flu.vacc.not.get.ill + Flu.vacc.prevent.baby.ill + Flu.vacc.prevent.family.friends.ill +Flu.vacc.prev.preg + If.yes.side.effects | fluyes, data=full1)
 
-table1(~ Vacc.prevent.disease + Vacc.safe + Intend.vacc.child.flu + Intend.vacc.baby + More.likely.vacc.if.family.friends.have | fluyes, data=full1)
-
-table1(~ Vacc.prevent.disease + Vacc.safe + Intend.vacc.child.flu + Intend.vacc.baby + More.likely.vacc.if.family.friends.have | If.COVID.vacc.available.would.have, data=full1)
-
-table1(~ Doc.flu + Pharm.flu + Nurse.flu + Midwife.flu + Health.visitor.flu + Fam.friend.flu | fluyes, data=full1)
-
-table1(~ COVID.ill + COVID.isolate + COVID.friends + COVID.could.contact.quarantine + COVID.family.friends.contact.quarantine + Knowledge.COVID.general + Knowledge.COVID.general + Knowledge.COVID.risk + I.am.risk.getting.COVID + Family.friends.risk.getting.COVID + You.or.close.friend.fam.pos.COVID + You.or.close.friend.fam.hosp.COVID | If.COVID.vacc.available.would.have, data=full1)
-
-table1(~ If.COVID.vacc.available.would.have + COVID.vacc.protect.me + COVID.vacc.protect.baby.fam.friends + Would.vacc.baby.COVID + If.COVID.vacc.seasonal.would.have + Would.have.COVID.vacc.if.not.preg, data=full1)
-
-table1(~ Doc.COVID + Pharm.COVID + Nurse.COVID + Midwife.COVID + Health.visitor.COVID + Fam.friend.COVID | If.COVID.vacc.available.would.have, data=full1)
-
-table1(~ Offered.flu.vacc + If.yes.offered.GP + If.yes.offered.wo.hosp + If.yes.offered.comm.ser.midwife + If.yes.offered.health.vis + If.yes.offered.pharm + If.yes.offered.other + Who.other.offered.specify + How.offered.letter + How.offered.text + How.offered.face.to.face + How.offered.other + How.other.offered.specify, data=full1)
 
 #table1(~ Access.GP.online.appts + Access.GP.online.prescrp + Access.GP.online.records + Access.GP.online.other + Live.with.alone + Live.with.partner + Live.with.child.ren + Live.with.parent.s + Live.with.other.family + Live.with.roommate.s, data=full1)
 
@@ -619,8 +590,6 @@ table1(~ Flu.vacc.this.preg + If.no.intend + Flu.vacc.prev.preg + If.yes.side.ef
 table1(~ If.COVID.vacc.available.would.have | You.or.close.friend.fam.pos.COVID, data=full1)
 
 table1(~ If.COVID.vacc.available.would.have | You.or.close.friend.fam.hosp.COVID, data=full1)
-
-table1(~ If.COVID.vacc.available.would.have | fluyes, data=full1)
 
 table1(~ fluyes | You.or.close.friend.fam.flu, data=full1)
 
@@ -645,5 +614,165 @@ IQR(full1$Age)
 summary(full1$Weeks.pregnant)
 
 IQR(full1$Weeks.pregnant)
+
+
+
+
+fisher.test
+
+#################################tables and stats####################################################################################
+
+#install.packages("tableone")
+
+
+require(tableone)
+
+#table and stats for table 1 demographics in relation to flu vax status and willingness to receive COVID vaccine
+
+#demographic table
+table1(~ Age + Weeks.pregnant + Occupation2 +Income+ Income2+Ethnicity+ Ethnicity2+No.of.children2+No.of.children+No.in.household+No.in.household2+OTC.meds.flu2+Alt.med.flu2+Antenatal.vitamins2+Folic.acid2+Pertussis+Education.Lvl+Education2 +If.COVID.vacc.available.would.have +monthresponse + PostApril16, data=full1)
+
+#demographic table in relation to willingness to receive COVID vax
+table1(~ Age + Weeks.pregnant + Occupation2 +Income+ Income2+ Ethnicity2+No.of.children2+No.in.household2+OTC.meds.flu2+Alt.med.flu2+Antenatal.vitamins2+Folic.acid2+Pertussis+Education2+If.no.intend+Flu.vacc.this.preg +monthresponse + PostApril16| If.COVID.vacc.available.would.have, data=full1)
+
+#summary of demographics in relation to flu vax status
+summary(Flu.vacc.this.preg ~ Age + Weeks.pregnant + Occupation2 + Income2 + Education2 + Ethnicity2 + No.of.children2 + No.in.household2 + Pertussis + Antenatal.vitamins2 + High.risk2 + OTC.meds.flu2 + Alt.med.flu2 + monthresponse + PostApril16, data=full1, method="reverse", test=T)
+
+#summary of demographics in relation to willingness to received covid vax
+summary( If.COVID.vacc.available.would.have ~ Age + Weeks.pregnant + Occupation2 +Income+ Income2+ Ethnicity2+No.of.children2+No.in.household2+OTC.meds.flu+Alt.med.flu+Antenatal.vitamins+Folic.acid+Pertussis+Education2+If.no.intend+Flu.vacc.this.preg + monthresponse + PostApril16, data=full1, method="reverse", test=T)
+
+summary(If.COVID.vacc.available.would.have ~ Age + Weeks.pregnant + Occupation2 + Income2+ Ethnicity2+No.of.children2+No.in.household2+OTC.meds.flu2+Alt.med.flu2+Antenatal.vitamins+Pertussis+Education2+If.no.intend+Flu.vacc.this.preg + High.risk2 + monthresponse + PostApril16, data=full1, method="reverse", test=T)
+
+#stats for create table one for demographics in relation to willingness to receive covid vax
+myvarstable1 <- c("Age", "Weeks.pregnant", "Occupation2", "Income2", "Ethnicity2", "No.of.children2", "No.in.household2", "OTC.meds.flu2", "Alt.med.flu2", "Antenatal.vitamins", "Folic.acid2", "Pertussis", "Education2", "If.no.intend", "Flu.vacc.this.preg", "High.risk2", "Smartphone", "monthresponse", "PostApril16")
+catvarstable1 <- c("Occupation2", "Income2", "Ethnicity2", "No.of.children2", "No.in.household2", "OTC.meds.flu2", "Alt.med.flu2", "Antenatal.vitamins", "Folic.acid2", "Pertussis", "Education2", "If.no.intend", "Flu.vacc.this.preg", "High.risk2", "Smartphone", "monthresponse", "PostApril16")
+exactvarstable1 <- c("", "Occupation2", "Ethnicity2", "No.of.children2", "No.in.household2", "Education2", "If.no.intend", "monthresponse", "PostApril16")
+
+table1man1 <- CreateTableOne(vars = myvarstable1, data = full1, strata = "fluyes")
+print(table1man1, exact = exactvarstable1, quote = TRUE)
+
+table1man2 <- CreateTableOne(vars = myvarstable1, data = full1, strata = "If.COVID.vacc.available.would.have")
+print(table1man2, exact = exactvarstable1, quote = TRUE)
+
+#demographic table in relation to willingness to receive covid vax
+table1(~ Age + Weeks.pregnant + Occupation2 + Income2 + Education2 + Ethnicity2 + No.of.children2 + No.in.household2 + Pertussis + Antenatal.vitamins2 + Folic.acid2 + High.risk2 + Shield + Smartphone + Exercise.before + Exercise.currently + Smoker + Discuss.vacc.with.partner.fam + monthresponse + as.factor(PostApril16)| If.COVID.vacc.available.would.have, data=full1)
+
+
+#table and stats for table 2 attitudes and beliefs about flu perception and risks in relation to flu vax status
+
+#summary for attitudes and beliefs about flu perception and risks in relation to flu vax status
+summary(fluyes ~ Flu.ill + Flu.stay.home.work.school + Flu.baby.ill + Flu.hurt.baby+ Flu.family.friends.ill + Flu.coworkers.colleages.ill + Flu.die + Knowledgeable.flu.general + Knowledgeable.flu.risk + I.am.risk.getting.flu + Family.friends.risk.getting.flu + You.or.close.friend.fam.flu + OTC.meds.flu2 + Alt.med.flu2, data=full1, method="reverse", test=T)
+
+#stats for create table one for attitudes and beliefs about flu perception and risks in relation to flu vax status (checking fisher exact)
+myvarstable2<-c("Flu.ill", "Flu.stay.home.work.school", "Flu.baby.ill", "Flu.hurt.baby", "Flu.family.friends.ill", "Flu.coworkers.colleages.ill", "Flu.die", "Knowledgeable.flu.general", "Knowledgeable.flu.risk", "I.am.risk.getting.flu", "Family.friends.risk.getting.flu", "You.or.close.friend.fam.flu", "OTC.meds.flu2", "Alt.med.flu2")
+catvarstable2<-c("Flu.ill", "Flu.stay.home.work.school", "Flu.baby.ill", "Flu.hurt.baby", "Flu.family.friends.ill", "Flu.coworkers.colleages.ill", "Flu.die", "Knowsledgeable.flu.general", "Knowledgeable.flu.risk", "I.am.risk.getting.flu", "Family.friends.risk.getting.flu", "You.or.close.friend.fam.flu", "OTC.meds.flu2", "Alt.med.flu2")
+exactvarstable2<-c("Flu.stay.home.work.school", "Flu.family.friends.ill", "Flu.coworkers.colleages.ill", "Flu.die", "Knowledgeable.flu.general", "Knowledgeable.flu.risk", "Alt.med.flu2")
+
+table2man<-CreateTableOne(vars=myvarstable2, data=full1, strata="fluyes")
+print(table2man,exact = exactvarstable2, quote = TRUE)
+
+
+#table and stats for table 3 attitudes and beliefs about flu vaccine in relation to flu vax status
+
+#summary for attitudes and beliefs about flu vaccine in relation to flu vax status
+summary(fluyes ~ Flu.vacc.side.effects + Flu.vacc.ill + Flu.vacc.hurt.baby + Flu.vacc.painful + Flu.vacc.not.protect.me + Flu.vacc.not.protect.baby + Inconvenient.flu.vacc + Shortage.flu.vacc + Flu.vacc.recommended + Flu.vacc.not.get.ill + Flu.vacc.prevent.baby.ill + Flu.vacc.prevent.family.friends.ill +Flu.vacc.prev.preg + If.yes.side.effects, data=full1, method="reverse", test=T)
+
+#stats for create table one for attitudes and beliefs about flu vaccine in relation to flu vax status (checking fisher exact)
+myvarstable3 <- c("Flu.vacc.side.effects", "Flu.vacc.ill", "Flu.vacc.hurt.baby", "Flu.vacc.painful", "Flu.vacc.not.protect.me", "Flu.vacc.not.protect.baby", "Inconvenient.flu.vacc", "Shortage.flu.vacc", "Flu.vacc.recommended", "Flu.vacc.not.get.ill", "Flu.vacc.prevent.baby.ill", "Flu.vacc.prevent.family.friends.ill", "Flu.vacc.prev.preg", "If.yes.side.effects")
+catvarstable3 <- c("Flu.vacc.side.effects", "Flu.vacc.ill", "Flu.vacc.hurt.baby", "Flu.vacc.painful", "Flu.vacc.not.protect.me", "Flu.vacc.not.protect.baby", "Inconvenient.flu.vacc", "Shortage.flu.vacc", "Flu.vacc.recommended", "Flu.vacc.not.get.ill", "Flu.vacc.prevent.baby.ill", "Flu.vacc.prevent.family.friends.ill", "Flu.vacc.prev.preg", "If.yes.side.effects")
+exactvarstable3 <- c("Flu.vacc.hurt.baby", "Inconvenient.flu.vacc", "Shortage.flu.vacc", "If.yes.side.effects")
+
+table3man <- CreateTableOne(vars = myvarstable3, data = full1, strata = "fluyes")
+print(table3man, exact = exactvarstable3, quote = TRUE)
+
+
+#table and stats for table 4 attitudes and beliefs about covid and risks in relation to willingness to receive covid vax
+
+#table for attitudes and beliefs about covid and risks in relation to willingness to receive covid vax
+table1(~ COVID.ill + COVID.isolate + COVID.friends + COVID.could.contact.quarantine + COVID.family.friends.contact.quarantine + Knowledge.COVID.general + Knowledge.COVID.general + Knowledge.COVID.risk + I.am.risk.getting.COVID + Family.friends.risk.getting.COVID + You.or.close.friend.fam.pos.COVID + You.or.close.friend.fam.hosp.COVID | If.COVID.vacc.available.would.have, data=full1)
+
+#summary for attitudes and beliefs about covid and risks in relation to willingness to receive covid vax
+summary(If.COVID.vacc.available.would.have ~ COVID.ill + COVID.isolate + COVID.friends + COVID.could.contact.quarantine + COVID.family.friends.contact.quarantine + Knowledge.COVID.general + Knowledge.COVID.general + Knowledge.COVID.risk + I.am.risk.getting.COVID + Family.friends.risk.getting.COVID + You.or.close.friend.fam.pos.COVID + You.or.close.friend.fam.hosp.COVID, data=full1, method="reverse", test=T)
+
+#stats for create table one for attitudes and beliefs about covid and risks in relation to willingness to receive covid vax (checking fisher exact)
+myvarstable4 <- c("COVID.ill", "COVID.isolate", "COVID.friends", "COVID.could.contact.quarantine", "COVID.family.friends.contact.quarantine", "Knowledge.COVID.general", "Knowledge.COVID.risk", "I.am.risk.getting.COVID", "Family.friends.risk.getting.COVID", "You.or.close.friend.fam.pos.COVID", "You.or.close.friend.fam.hosp.COVID")
+catvarstable4 <- c("COVID.ill", "COVID.isolate", "COVID.friends", "COVID.could.contact.quarantine", "COVID.family.friends.contact.quarantine", "Knowledge.COVID.general", "Knowledge.COVID.risk", "I.am.risk.getting.COVID", "Family.friends.risk.getting.COVID", "You.or.close.friend.fam.pos.COVID", "You.or.close.friend.fam.hosp.COVID")
+exactvarstable4 <- c("COVID.ill", "COVID.isolate", "COVID.could.contact.quaratine", "COVID.family.friends.contact.quarantine", "Knowledgeable.COVID.general", "Knowledge.COVID.risk", "I.am.risk.getting.COVID", "Family.friends.risk.getting.COVID")
+
+table4man <- CreateTableOne(vars = myvarstable4, data = full1, strata = "If.COVID.vacc.available.would.have")
+print(table4man, exact = exactvarstable4, quote = TRUE)
+
+
+#table for table 5 attitudes and beleiefs towards covid vax
+
+table1(~ If.COVID.vacc.available.would.have + COVID.vacc.protect.me + COVID.vacc.protect.baby.fam.friends + Would.vacc.baby.COVID + If.COVID.vacc.seasonal.would.have + Would.have.COVID.vacc.if.not.preg, data=full1)
+
+
+#table and stats for supplementary table 1 health behaviours in relation to flu vax status and willingness to receive covid vax
+
+#stats for create table one  for health behaviours in relation to flu vax status and willigness to receive covid vax (checking fisher exact); this is where pertussis info is
+myvarstableS1 <- c("Pertussis", "Antenatal.vitamins2", "Folic.acid2", "High.risk2", "Shield", "Exercise.before", "Exercise.currently", "Smoker", "Discuss.vacc.with.partner.fam")
+catvarstableS1 <- c("Pertussis", "Antenatal.vitamins2", "Folic.acid2", "High.risk2", "Shield", "Exercise.before", "Exercise.currently", "Smoker", "Discuss.vacc.with.partner.fam")
+exactvarstableS1 <- c("Antenatal.vitamins2", "High.risk2", "Exercise.before", "Exercise.currently", "Smoker")
+
+tableS1man1 <- CreateTableOne(vars = myvarstableS1, data = full1, strata = "fluyes")
+print(tableS1man1, exact = exactvarstableS1, quote = TRUE)
+
+tableS1man2 <- CreateTableOne(vars = myvarstableS1, data = full1, strata = "If.COVID.vacc.available.would.have")
+print(tableS1man2, exact = exactvarstableS1, quote = TRUE)
+
+
+#table and stats for supplementary table 2 means by which flu vax was offered
+
+table1(~ Offered.flu.vacc + If.yes.offered.GP + If.yes.offered.wo.hosp + If.yes.offered.comm.ser.midwife + If.yes.offered.health.vis + If.yes.offered.pharm + If.yes.offered.other + Who.other.offered.specify + How.offered.letter + How.offered.text + How.offered.face.to.face + How.offered.other + How.other.offered.specify, data=full1)
+
+
+#table and stats for supplementary table 3 attitudes and beliefs towards vaccination in general in relation to flu vax status and willingness to accept covid vax
+
+#table for attitudes and beliefs towards vaccination in general in relation to flu vax status and willingness to receive covid vax
+table1(~ Vacc.prevent.disease + Vacc.safe + Intend.vacc.child.flu + Intend.vacc.baby + More.likely.vacc.if.family.friends.have | If.COVID.vacc.available.would.have, data=full1)
+
+#stats for create table one for attitudes and beliefs towards vaccination in general in relation to flu vax status and willingness to receive covid vax (Checking fisher exact)
+myvarstableS3 <- c("Vacc.prevent.disease", "Vacc.safe", "Intend.vacc.child.flu", "Intend.vacc.baby", "More.likely.vacc.if.family.friends.have")
+catvarstableS3 <- c("Vacc.prevent.disease", "Vacc.safe", "Intend.vacc.child.flu", "Intend.vacc.baby", "More.likely.vacc.if.family.friends.have")
+exactvarstableS3 <- c("Vacc.prevent.disease", "Vacc.safe", "Intend.vacc.child.flu", "Intend.vacc.baby")
+
+tableS3man1 <- CreateTableOne(vars = myvarstableS3, data = full1, strata = "fluyes")
+print(tableS3man1, exact = exactvarstableS3, quote = TRUE)
+
+tableS3man2 <- CreateTableOne(vars = myvarstableS3, data = full1, strata = "If.COVID.vacc.available.would.have")
+print(tableS3man2, exact = exactvarstableS3, quote = TRUE)
+
+
+#table and stats for supplementary table 4 likelihood to accept flu vax from different healthcare professionals in relation to flu vax status
+
+myvarstableS4 <- c("Doc.flu", "Pharm.flu", "Nurse.flu", "Midwife.flu", "Health.visitor.flu", "Fam.friend.flu")
+catvarstableS4 <- c("Doc.flu", "Pharm.flu", "Nurse.flu", "Midwife.flu", "Health.visitor.flu", "Fam.friend.flu")
+exactvarstableS4 <- c("Doc.flu", "Nurse.flu", "Midwife.flu")
+
+tableS4man <- CreateTableOne(vars = myvarstableS4, data = full1, strata = "fluyes")
+print(tableS4man, exact = exactvarstableS4, quote = TRUE)
+
+
+#table and stats for supplementary table 5 likelihood to accept covid vax from different healthcare professionals in relation to willingness to receive covid vax
+
+#table for likelihood to accept covid vax from different healthcare professionals in relation to willingness to receive covid vax
+table1(~ Doc.COVID + Pharm.COVID + Nurse.COVID + Midwife.COVID + Health.visitor.COVID + Fam.friend.COVID | If.COVID.vacc.available.would.have, data=full1)
+
+#stats for create table one for likelihood to accept covid vax from different healthcare professionals in relation to willingness to receive covid vac (Checking fisher exact)
+myvarstableS5 <- c("Doc.COVID", "Pharm.COVID", "Nurse.COVID", "Midwife.COVID", "Health.visitor.COVID", "Fam.friend.COVID")
+catvarstableS5 <- c("Doc.COVID", "Pharm.COVID", "Nurse.COVID", "Midwife.COVID", "Health.visitor.COVID", "Fam.friend.COVID")
+exactvarstableS5 <- c("Doc.COVID", "Pharm.COVID", "Nurse.COVID", "Midwife.COVID", "Health.visitor.COVID")
+
+tableS5man <- CreateTableOne(vars = myvarstableS5, data = full1, strata = "If.COVID.vacc.available.would.have")
+print(tableS5man, exact = exactvarstableS5, quote = TRUE)
+
+
+
+
+
+
+
+
 
 
