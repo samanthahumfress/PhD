@@ -1,0 +1,69 @@
+﻿code,description,ari_hes,ari_pnemo_hes,ari_flu_hes,source
+A37,whooping cough,1,,,LSHTM
+A37.0,whooping cough due to bordetella pertussis,1,,,LSHTM
+A37.1,whooping cough due to bordetella parapertussis,1,,,LSHTM
+A37.8,whooping cough due to bordetella species,1,,,LSHTM
+A37.9,"whooping cough, unspecified",1,,,LSHTM
+B01.2,varicella pneumonia,1,1,,LSHTM
+B05.2,measles complicated by pneumonia,1,1,,LSHTM
+B25.0,cytomegaloviral pneumonitis,1,,,LSHTM
+J09,influenza due to identified zoonotic or pandemic influenza virus,1,,1,LSHTM
+J10,influenza due to identified seasonal influenza virus,1,,1,LSHTM
+J10.0,"influenza with pneumonia, seasonal influenza identified",1,1,1,LSHTM
+J10.1,"influenza with other respiratory manifestations, seasonal influenza virus identified",1,,1,LSHTM
+J11,"influenza, virus not identified",1,,1,LSHTM
+J11.0,"influenza with pneumonia, virus not identified",1,1,1,LSHTM
+J11.1,"influenza with other respiratory manifestations, virus not identified",1,,1,LSHTM
+J11.8,"influenza with other manifestations, virus not identified",1,,1,LSHTM
+J12,"viral pneumonia, not elsewhere classified",1,1,,LSHTM
+J12.0,adenoviral pneumonia,1,1,,LSHTM
+J12.1,respiratory synctial virus pneumonia,1,1,,LSHTM
+J12.2,parainfluenza virus pneumonia,1,1,1,LSHTM
+J12.3,human metapneumovirus pneumonia,1,1,,LSHTM
+J12.8,other viral pneumonia,1,1,,LSHTM
+J12.9,"viral pneumonia, unspecified",1,1,,LSHTM
+J13,pneumonia due to streptococcus pneumoniae,1,1,,LSHTM
+J14,pneumonia due to haemophilus influenzae,1,1,1,LSHTM
+J15,"bacterial pneumonia, not elsewhere classified",1,1,,LSHTM
+J15.0,pneumonia due to klebsiella pneumoniae,1,1,,LSHTM
+J15.1,pneumonia due to pseudomonas,1,1,,LSHTM
+J15.2,pneumonia due to staphylococcus,1,1,,LSHTM
+J15.3,"pneumonia due to streptococcus, group b",1,1,,LSHTM
+J15.4,pneumonia due to other stretococci,1,1,,LSHTM
+J15.5,pneumonia due to escheria coli,1,1,,LSHTM
+J15.6,pneumonia due to other gram-negative bacteria,1,1,,LSHTM
+J15.7,pneumonia due to mycoplasma pneumoniae,1,1,,LSHTM
+J15.8,other bacterial pneumonia,1,1,,LSHTM
+J15.9,"bacteria pneumonia, unspecified",1,1,,LSHTM
+J16,"pneumonia due to other infectious organisms, not elsewhere classified",1,1,,LSHTM
+J16.0,chlamydial pneumonia,1,1,,LSHTM
+J16.8,pneumonia due to other specified infectious organisms,1,1,,LSHTM
+J17,pneumonia in diseases classified elsewhere,1,1,,LSHTM
+J17.0,pneumonia in bacterial diseases classified elsewhere,1,1,,LSHTM
+J17.1,pneumonia in viral diseases classified elsewhere,1,1,,LSHTM
+J17.2,pneumonia in mycoses,1,1,,LSHTM
+J17.3,pneumonia in parasitic diseases,1,1,,LSHTM
+J17.8,pneumonia in other diseases classified elsewhere,1,1,,LSHTM
+J18,"pneumonia, organism unspecified",1,1,,LSHTM
+J18.0,"bronchopneumonia, unspecified",1,1,,LSHTM
+J18.1,"lobar pneumonia, unspecified",1,1,,LSHTM
+J18.2,"hypostatic pneumonia, unspecified",1,1,,LSHTM
+J18.8,"other pneumonia, organism unspecified",1,1,,LSHTM
+J18.9,"pneumonia, unspecified",1,1,,LSHTM
+J20,acute bronchitis,1,,,LSHTM
+J20.0,acute bronchitis due to mycoplasma pneumoniae,1,1,,LSHTM
+J20.1,acute bronchitis due to haemophilus,1,,1,LSHTM
+J20.2,acute bronchitis due to streptococcus,1,,,LSHTM
+J20.3,acute bronchitis due to coxsakievirus,1,,,LSHTM
+J20.4,acute bronchitis due to parainfluenza virus,1,,1,LSHTM
+J20.5,acute bronchitis due to respiratory synctial virus,1,,,LSHTM
+J20.6,acute bronchitis due to rhinovirus,1,,,LSHTM
+J20.7,acute bronchitis due to echovirus,1,,,LSHTM
+J20.8,acute bronchitis due to other specified organisms,1,,,LSHTM
+J20.9,"acute bronchitis, unspecified",1,,,LSHTM
+J21,acute bronchiolitis,1,,,LSHTM
+J21.0,acute bronchiolitis due to respiratory synctial virus,1,,,LSHTM
+J21.1,acute bronchiolitis due to human metapneumovirus,1,,,LSHTM
+J21.8,acute bronchiolitis due to other specified organisms,1,,,LSHTM
+J21.9,"acute bronchiolitis, unspecified",1,,,LSHTM
+J22,unspecified acute lower respiratory infection,1,,,LSHTM
